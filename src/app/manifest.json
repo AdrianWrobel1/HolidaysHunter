@@ -1,0 +1,16 @@
+{
+  "name": "HolidaysHunter",
+  "short_name": "HolidaysHunter",
+  "description": "Inteligentny monitor i wyszukiwarka okazji wakacyjnych",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
