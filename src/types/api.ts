@@ -27,7 +27,7 @@ export interface OfferResponse {
   price_total: string;
   price_per_person: string;
   currency: string;
-  offer_url: string;
+  offer_url: string | null;
   image_url: string | null;
   travel_score: number | null;
   is_available: boolean;
@@ -52,6 +52,7 @@ export interface OffersListResponse {
 export interface FilterOptionsResponse {
   countries: string[];
   regions: string[];
+  country_regions?: Record<string, string[]>;
   departure_cities: string[];
   providers: string[];
   meal_types: string[];
@@ -98,6 +99,25 @@ export interface TravelProfileCreate {
   providers?: string[];
 }
 
+export interface TravelProfileUpdate {
+  name?: string;
+  countries?: string[];
+  regions?: string[];
+  departure_cities?: string[];
+  date_from?: string;
+  date_to?: string;
+  duration_min?: number;
+  duration_max?: number;
+  budget_min?: number;
+  budget_max?: number;
+  adults?: number;
+  children?: number;
+  hotel_stars_min?: number;
+  meal_types?: string[];
+  providers?: string[];
+  is_active?: boolean;
+}
+
 export interface AlertEvent {
   id: string;
   offer_id: string;
@@ -120,12 +140,13 @@ export interface AlertsListResponse {
 export interface OfferQueryParams {
   page?: number;
   page_size?: number;
-  country?: string;
-  region?: string;
-  provider?: string;
-  departure_city?: string;
-  meal_type?: string;
+  country?: string | string[];
+  region?: string | string[];
+  provider?: string | string[];
+  departure_city?: string | string[];
+  meal_type?: string | string[];
   transport_type?: string;
+  hotel_stars?: number | number[];
   hotel_stars_min?: number;
   price_min?: number;
   price_max?: number;

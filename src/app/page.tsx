@@ -7,17 +7,18 @@ import {
   OfferResponse,
   OffersListResponse,
 } from '@/types/api';
-import { fetchFilterOptions, fetchOffers, fetchAlerts } from '@/lib/api';
+import { fetchFilterOptions, fetchOffers, fetchAlerts, fetchLiveOffers, fetchOfferDetail, deleteOffer, clearAllOffers } from '@/lib/api';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
 import { OfferCard } from '@/components/OfferCard';
 import { OfferModal } from '@/components/OfferModal';
 import { ProfilesView } from '@/components/ProfilesView';
 import { AlertsView } from '@/components/AlertsView';
-import { Compass, ChevronLeft, ChevronRight, Sparkles, AlertCircle } from 'lucide-react';
+import { SeasonalAnalyticsView } from '@/components/SeasonalAnalyticsView';
+import { Compass, ChevronLeft, ChevronRight, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'explorer' | 'profiles' | 'alerts'>('explorer');
+  const [activeTab, setActiveTab] = useState<'explorer' | 'profiles' | 'alerts' | 'seasonal'>('explorer');
 
   // Explorer Data State
   const [offersData, setOffersData] = useState<OffersListResponse | null>(null);
@@ -29,6 +30,8 @@ export default function Home() {
     sort_order: 'asc',
   });
   const [loadingOffers, setLoadingOffers] = useState(false);
+  const [fetchingLive, setFetchingLive] = useState(false);
+  const [liveMessage, setLiveMessage] = useState<{ text: string; type: 'success' | 'info' } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Selected Offer for Modal
@@ -47,6 +50,46 @@ export default function Home() {
       .then((res) => setUnreadCount(res.total))
       .catch((err) => console.warn('Could not load unread alerts:', err));
   }, []);
+
+  // Fetch offer by ID to open modal
+  const handleSelectOfferById = async (offerId: string) => {
+    try {
+      const detail = await fetchOfferDetail(offerId);
+      setSelectedOffer(detail);
+    } catch (err) {
+      console.error('Failed to load offer details:', err);
+    }
+  };
+
+  const handleDeleteSingleOffer = async (offerId: string) => {
+    try {
+      await deleteOffer(offerId);
+      setLiveMessage({ text: 'Oferta została pomyślnie usunięta z bazy danych.', type: 'success' });
+      if (selectedOffer?.id === offerId) {
+        setSelectedOffer(null);
+      }
+      const updated = await fetchOffers(queryParams);
+      setOffersData(updated);
+    } catch (err) {
+      console.error('Failed to delete offer:', err);
+      setError('Błąd podczas usuwania oferty.');
+    }
+  };
+
+  const handleClearAllOffers = async () => {
+    try {
+      const res = await clearAllOffers();
+      setLiveMessage({ text: res.message, type: 'success' });
+      setSelectedOffer(null);
+      const updated = await fetchOffers(queryParams);
+      setOffersData(updated);
+      const updatedFilters = await fetchFilterOptions();
+      setFilterOptions(updatedFilters);
+    } catch (err) {
+      console.error('Failed to clear all offers:', err);
+      setError('Błąd podczas czyszczenia bazy ofert.');
+    }
+  };
 
   // Load Offers when params change or tab switches to explorer
   useEffect(() => {
@@ -73,11 +116,44 @@ export default function Home() {
       sort_by: 'price_per_person',
       sort_order: 'asc',
     });
+    setLiveMessage(null);
   };
 
   const handlePageChange = (newPage: number) => {
     setQueryParams((prev) => ({ ...prev, page: newPage }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLoadMore = () => {
+    if (offersData && offersData.page < offersData.total_pages) {
+      setQueryParams((prev) => ({
+        ...prev,
+        page_size: (prev.page_size || 12) + 12,
+      }));
+    }
+  };
+
+  const handleFetchLive = async () => {
+    try {
+      setFetchingLive(true);
+      setError(null);
+      setLiveMessage(null);
+      const res = await fetchLiveOffers(queryParams);
+      const isInfo = res.status === 'info' || res.count === 0;
+      setLiveMessage({ text: res.message, type: isInfo ? 'info' : 'success' });
+
+      // Refresh list and filters
+      const updatedOffers = await fetchOffers(queryParams);
+      setOffersData(updatedOffers);
+
+      const updatedFilters = await fetchFilterOptions();
+      setFilterOptions(updatedFilters);
+    } catch (err) {
+      console.error('Error fetching live offers:', err);
+      setError('Nie udało się pobrać danych na żywo z biur podróży.');
+    } finally {
+      setFetchingLive(false);
+    }
   };
 
   return (
@@ -103,7 +179,7 @@ export default function Home() {
                   Znajdź najlepsze wakacje przed wszystkimi.
                 </h2>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  System automatycznie agreguje i normalizuje oferty z biur Itaka, TUI, Rainbow i Wakacje.pl. Przeglądaj, filtruj i sprawdzaj historię cen!
+                  System automatycznie agreguje i normalizuje oferty z biur Itaka, TUI, Rainbow i Wakacje.pl. Przeglądaj, filtruj po kraju i regionie oraz sprawdzaj historię cen!
                 </p>
               </div>
             </div>
@@ -114,7 +190,28 @@ export default function Home() {
               params={queryParams}
               onChange={setQueryParams}
               onReset={handleResetFilters}
+              onFetchLive={handleFetchLive}
+              fetchingLive={fetchingLive}
+              onClearAll={handleClearAllOffers}
             />
+
+            {/* Live Fetch Success / Info Banner */}
+            {liveMessage && (
+              <div
+                className={`p-4 rounded-2xl border text-xs flex items-center gap-3 animate-fadeIn ${
+                  liveMessage.type === 'info'
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                }`}
+              >
+                {liveMessage.type === 'info' ? (
+                  <AlertCircle className="w-5 h-5 shrink-0 text-amber-400" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                )}
+                <span>{liveMessage.text}</span>
+              </div>
+            )}
 
             {/* Error Display */}
             {error && (
@@ -153,9 +250,23 @@ export default function Home() {
                       key={offer.id}
                       offer={offer}
                       onSelect={setSelectedOffer}
+                      onDelete={handleDeleteSingleOffer}
                     />
                   ))}
                 </div>
+
+                {/* Load More Button */}
+                {offersData.page < offersData.total_pages && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={handleLoadMore}
+                      className="px-6 py-3 rounded-2xl bg-indigo-600/90 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 hover:scale-105 transition-all flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300" suppressHydrationWarning />
+                      <span>Pokaż więcej ofert (+12)</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Pagination Controls */}
                 {offersData.total_pages > 1 && (
@@ -191,7 +302,7 @@ export default function Home() {
                   <Compass className="w-12 h-12 text-slate-600 mx-auto stroke-[1.5]" />
                   <h3 className="text-lg font-bold text-slate-200">Brak ofert spełniających kryteria</h3>
                   <p className="text-xs text-slate-400 max-w-md mx-auto">
-                    Zmień parametry wyszukiwania lub zresetuj filtry. Jeżeli baza jest pusta, uruchom skrypt importu ofert w backendzie.
+                    Zmień parametry wyszukiwania lub zresetuj filtry. Jeżeli baza jest pusta, kliknij "Pobierz na żywo z biur" lub uruchom import ofert.
                   </p>
                   <button
                     onClick={handleResetFilters}
@@ -213,7 +324,13 @@ export default function Home() {
 
         {activeTab === 'alerts' && (
           <div className="animate-fadeIn">
-            <AlertsView />
+            <AlertsView onSelectOffer={handleSelectOfferById} />
+          </div>
+        )}
+
+        {activeTab === 'seasonal' && (
+          <div className="animate-fadeIn">
+            <SeasonalAnalyticsView />
           </div>
         )}
       </main>
@@ -222,6 +339,7 @@ export default function Home() {
       <OfferModal
         offer={selectedOffer}
         onClose={() => setSelectedOffer(null)}
+        onDelete={handleDeleteSingleOffer}
       />
     </div>
   );

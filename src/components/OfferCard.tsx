@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Star,
   Eye,
+  Trash2,
 } from 'lucide-react';
 
 import { resolveOfferBookingUrl } from '@/lib/urlUtils';
@@ -19,6 +20,7 @@ import { resolveOfferBookingUrl } from '@/lib/urlUtils';
 interface OfferCardProps {
   offer: OfferResponse;
   onSelect: (offer: OfferResponse) => void;
+  onDelete?: (id: string) => void;
 }
 
 const PROVIDER_NAMES: Record<string, { label: string; bg: string }> = {
@@ -36,7 +38,7 @@ const MEAL_LABELS: Record<string, string> = {
   self_catering: 'We własnym zakresie (OV)',
 };
 
-export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect }) => {
+export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect, onDelete }) => {
   const providerInfo = PROVIDER_NAMES[offer.provider] || {
     label: offer.provider,
     bg: 'bg-slate-800 text-slate-300 border-slate-700',
@@ -143,6 +145,18 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect }) => {
           </div>
 
           <div className="flex items-center gap-2">
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(offer.id);
+                }}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 transition-colors border border-slate-700 hover:border-rose-700/50"
+                title="Usuń tę ofertę z bazy"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => onSelect(offer)}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700"
@@ -150,16 +164,29 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect }) => {
             >
               <Eye className="w-4 h-4" />
             </button>
-            <a
-              href={resolveOfferBookingUrl(offer)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 transition-all hover:scale-105"
-            >
-              <span>Rezerwuj</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            {(() => {
+              const bookingUrl = resolveOfferBookingUrl(offer);
+              return bookingUrl ? (
+                <a
+                  href={bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 transition-all hover:scale-105"
+                >
+                  <span>Rezerwuj</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              ) : (
+                <span
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-slate-500 font-medium text-xs cursor-not-allowed opacity-60"
+                  title="Brak bezpośredniego linku do oferty u operatora"
+                >
+                  <span>Brak linku</span>
+                </span>
+              );
+            })()}
           </div>
         </div>
       </div>

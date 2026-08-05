@@ -18,14 +18,16 @@ import {
   Clock,
   Building,
   CheckCircle2,
+  Trash2,
 } from 'lucide-react';
 
 interface OfferModalProps {
   offer: OfferResponse | null;
   onClose: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose }) => {
+export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose, onDelete }) => {
   const [detail, setDetail] = useState<OfferDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -93,6 +95,19 @@ export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose }) => {
 
         {/* Modal Body Content */}
         <div className="p-6 space-y-6">
+          {/* Availability Alert Banner if offer is expired */}
+          {!current.is_available && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-3 animate-fadeIn">
+              <span className="text-xl shrink-0">⚠️</span>
+              <div>
+                <strong className="block text-sm font-bold text-amber-300">Oferta Wygasła / Wyprzedana w biurze podróży</strong>
+                <p className="text-slate-300 mt-0.5">
+                  Ta konkretna oferta nie jest już dostępna u operatora (została wyprzedana lub usunięta z systemu biura). Zamieściliśmy historię zmian jej ceny poniżej. Możesz poszukać nowych aktualnych ofert dla kierunku <strong>{current.country} {current.region ? `(${current.region})` : ''}</strong>!
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Key Specs Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-800 flex items-center gap-3">
@@ -161,7 +176,7 @@ export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose }) => {
           )}
 
           {/* Footer Action Bar */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+          <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-4">
             <div>
               <div className="text-xs text-slate-400">Łączna cena za wyjazd</div>
               <div className="text-2xl font-black text-emerald-400">
@@ -170,15 +185,42 @@ export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose }) => {
               <div className="text-xs text-slate-400">({current.price_per_person} PLN / os.)</div>
             </div>
 
-            <a
-              href={resolveOfferBookingUrl(current)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 hover:scale-105 transition-all"
-            >
-              <span>Przejdź do oferty na {current.provider.toUpperCase()}</span>
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            <div className="flex items-center gap-3">
+              {onDelete && (
+                <button
+                  onClick={() => {
+                    onDelete(current.id);
+                    onClose();
+                  }}
+                  className="px-4 py-3 rounded-2xl bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/80 text-rose-300 font-semibold text-xs flex items-center gap-1.5 transition-all"
+                  title="Usuń tę ofertę trwale z bazy"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Usuń ofertę</span>
+                </button>
+              )}
+              {(() => {
+                const bookingUrl = resolveOfferBookingUrl(current);
+                return bookingUrl ? (
+                  <a
+                    href={bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 hover:scale-105 transition-all"
+                  >
+                    <span>Przejdź do oferty na {current.provider.toUpperCase()}</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <span
+                    className="px-6 py-3 rounded-2xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed opacity-60"
+                    title="Brak bezpośredniego linku do oferty u operatora"
+                  >
+                    Brak linku do oferty
+                  </span>
+                );
+              })()}
+            </div>
           </div>
         </div>
       </div>

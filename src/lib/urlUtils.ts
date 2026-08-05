@@ -1,42 +1,34 @@
 import { OfferResponse } from '@/types/api';
 
-/**
- * Resolves a valid external booking URL for an offer.
- * If the provided offer_url is missing or invalid, generates a targeted search URL
- * on the provider's website or Google so the user can easily find and book the offer.
- */
-export function resolveOfferBookingUrl(offer: OfferResponse): string {
-  const rawUrl = offer.offer_url ? offer.offer_url.trim() : '';
+const PROVIDER_DOMAINS: Record<string, string> = {
+  itaka: 'https://www.itaka.pl',
+  tui: 'https://www.tui.pl',
+  rainbow: 'https://r.pl',
+  wakacje_pl: 'https://www.wakacje.pl',
+};
 
-  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
-    return rawUrl;
+/**
+ * Resolves the direct booking URL for an offer.
+ * Returns the exact offer URL if available, adding the provider domain if relative.
+ * Returns null if no valid offer URL is available. No fallbacks (no Google Search, no search query, no region pages).
+ */
+export function resolveOfferBookingUrl(offer: OfferResponse): string | null {
+  if (!offer.offer_url || !offer.offer_url.trim()) {
+    return null;
+  }
+
+  const url = offer.offer_url.trim();
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
   }
 
   const provider = (offer.provider || '').toLowerCase();
-  const query = encodeURIComponent(`${offer.hotel_name || ''} ${offer.country || ''}`.trim());
+  const domain = PROVIDER_DOMAINS[provider];
 
-  // Handle relative URLs if any
-  if (rawUrl.startsWith('/')) {
-    if (provider.includes('itaka')) return `https://www.itaka.pl${rawUrl}`;
-    if (provider.includes('tui')) return `https://www.tui.pl${rawUrl}`;
-    if (provider.includes('rainbow')) return `https://r.pl${rawUrl}`;
-    if (provider.includes('wakacje')) return `https://www.wakacje.pl${rawUrl}`;
+  if (domain) {
+    return url.startsWith('/') ? `${domain}${url}` : `${domain}/${url}`;
   }
 
-  // Fallback search URLs per provider
-  if (provider.includes('itaka')) {
-    return query ? `https://www.itaka.pl/wyniki-wyszukiwania/?q=${query}` : 'https://www.itaka.pl';
-  }
-  if (provider.includes('tui')) {
-    return query ? `https://www.tui.pl/wyszukiwanie?query=${query}` : 'https://www.tui.pl';
-  }
-  if (provider.includes('rainbow')) {
-    return query ? `https://r.pl/szukaj?q=${query}` : 'https://r.pl';
-  }
-  if (provider.includes('wakacje')) {
-    return query ? `https://www.wakacje.pl/oferty/?q=${query}` : 'https://www.wakacje.pl';
-  }
-
-  // General web search fallback
-  return `https://www.google.com/search?q=${encodeURIComponent(`${offer.provider || ''} ${offer.hotel_name || ''} ${offer.country || ''} rezerwacja wakacje`.trim())}`;
+  return url;
 }

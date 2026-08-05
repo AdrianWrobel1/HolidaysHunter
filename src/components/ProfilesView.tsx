@@ -2,25 +2,46 @@
 
 import React, { useState, useEffect } from 'react';
 import { TravelProfile, TravelProfileCreate, FilterOptionsResponse } from '@/types/api';
-import { fetchTravelProfiles, createTravelProfile, deleteTravelProfile } from '@/lib/api';
-import { Plus, Trash2, ShieldCheck, MapPin, Calendar, DollarSign, Check, X } from 'lucide-react';
+import { fetchTravelProfiles, createTravelProfile, updateTravelProfile, deleteTravelProfile } from '@/lib/api';
+import { Plus, Trash2, Pencil, ShieldCheck, MapPin, Calendar, DollarSign, Users, Moon, Check, X } from 'lucide-react';
 
 interface ProfilesViewProps {
   filterOptions: FilterOptionsResponse | null;
 }
 
+const DEFAULT_POPULAR_COUNTRIES = [
+  'Hiszpania',
+  'Grecja',
+  'Egipt',
+  'Turcja',
+  'Włochy',
+  'Bułgaria',
+  'Cypr',
+  'Chorwacja',
+  'Tunezja',
+  'Dominikana',
+  'Malediwy',
+  'Meksyk',
+];
+
+const DEFAULT_AIRPORTS = ['Warszawa', 'Katowice', 'Kraków', 'Poznań', 'Wrocław', 'Gdańsk'];
+
 export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => {
   const [profiles, setProfiles] = useState<TravelProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
 
-  // Form state for creating new profile
+  // Form state
   const [name, setName] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [budgetMax, setBudgetMax] = useState('');
-  const [durationMin, setDurationMin] = useState('7');
-  const [hotelStarsMin, setHotelStarsMin] = useState('3');
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [adults, setAdults] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
+  const [durationMin, setDurationMin] = useState<string>('7');
+  const [durationMax, setDurationMax] = useState<string>('14');
+  const [budgetMax, setBudgetMax] = useState<string>('');
+  const [hotelStarsMin, setHotelStarsMin] = useState<string>('3');
 
   const loadProfiles = async () => {
     try {
@@ -38,29 +59,80 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
     loadProfiles();
   }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const availableCountries = filterOptions?.countries || DEFAULT_POPULAR_COUNTRIES;
+  const availableCities = filterOptions?.departure_cities || DEFAULT_AIRPORTS;
+
+  const handleOpenCreateModal = () => {
+    setEditingProfileId(null);
+    setName('');
+    setSelectedCountries([]);
+    setSelectedCities([]);
+    setAdults(2);
+    setChildren(0);
+    setDurationMin('7');
+    setDurationMax('14');
+    setBudgetMax('');
+    setHotelStarsMin('3');
+    setShowModal(true);
+  };
+
+  const handleOpenEditModal = (profile: TravelProfile) => {
+    setEditingProfileId(profile.id);
+    setName(profile.name);
+    setSelectedCountries(profile.countries || []);
+    setSelectedCities(profile.departure_cities || []);
+    setAdults(profile.adults ?? 2);
+    setChildren(profile.children ?? 0);
+    setDurationMin(profile.duration_min ? String(profile.duration_min) : '7');
+    setDurationMax(profile.duration_max ? String(profile.duration_max) : '14');
+    setBudgetMax(profile.budget_max ? String(profile.budget_max) : '');
+    setHotelStarsMin(profile.hotel_stars_min ? String(profile.hotel_stars_min) : '3');
+    setShowModal(true);
+  };
+
+  const toggleCountry = (country: string) => {
+    if (selectedCountries.includes(country)) {
+      setSelectedCountries(selectedCountries.filter((c) => c !== country));
+    } else {
+      setSelectedCountries([...selectedCountries, country]);
+    }
+  };
+
+  const toggleCity = (city: string) => {
+    if (selectedCities.includes(city)) {
+      setSelectedCities(selectedCities.filter((c) => c !== city));
+    } else {
+      setSelectedCities([...selectedCities, city]);
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     const payload: TravelProfileCreate = {
       name,
-      countries: selectedCountry ? [selectedCountry] : undefined,
-      departure_cities: selectedCity ? [selectedCity] : undefined,
-      budget_max: budgetMax ? Number(budgetMax) : undefined,
+      countries: selectedCountries.length > 0 ? selectedCountries : undefined,
+      departure_cities: selectedCities.length > 0 ? selectedCities : undefined,
+      adults: Number(adults),
+      children: Number(children),
       duration_min: durationMin ? Number(durationMin) : undefined,
+      duration_max: durationMax ? Number(durationMax) : undefined,
+      budget_max: budgetMax ? Number(budgetMax) : undefined,
       hotel_stars_min: hotelStarsMin ? Number(hotelStarsMin) : undefined,
     };
 
     try {
-      await createTravelProfile(payload);
+      if (editingProfileId) {
+        await updateTravelProfile(editingProfileId, payload);
+      } else {
+        await createTravelProfile(payload);
+      }
       setShowModal(false);
-      setName('');
-      setSelectedCountry('');
-      setSelectedCity('');
-      setBudgetMax('');
+      setEditingProfileId(null);
       loadProfiles();
     } catch (err) {
-      console.error('Error creating profile:', err);
+      console.error('Error saving profile:', err);
     }
   };
 
@@ -81,7 +153,7 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-indigo-400" />
-            Profili Podróży (Automatyczny Monitoring)
+            Profili Podróży (Automatyczny Monitoring 24/7)
           </h2>
           <p className="text-xs text-slate-400 mt-1">
             Zdefiniuj preferencje wakacyjne. Backend 24/7 analizuje spływające oferty i natychmiast wysyła powiadomienie na Telegram, gdy wykryje nową okazję!
@@ -89,7 +161,7 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleOpenCreateModal}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold text-xs shadow-lg shadow-indigo-600/20 transition-all hover:scale-105"
         >
           <Plus className="w-4 h-4" />
@@ -124,28 +196,65 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
                   </span>
                   <h3 className="text-base font-bold text-white">{profile.name}</h3>
                 </div>
-                <button
-                  onClick={() => handleDelete(profile.id)}
-                  className="p-1.5 rounded-lg bg-slate-800 text-slate-500 hover:text-rose-400 hover:bg-slate-700 transition-colors"
-                  title="Usuń profil"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleOpenEditModal(profile)}
+                    className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 transition-colors"
+                    title="Edytuj profil"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(profile.id)}
+                    className="p-1.5 rounded-lg bg-slate-800 text-slate-500 hover:text-rose-400 hover:bg-slate-700 transition-colors"
+                    title="Usuń profil"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Criteria details */}
               <div className="space-y-2 text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Kraj: <strong>{profile.countries?.join(', ') || 'Wszystkie'}</strong></span>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                  <span>
+                    Kraje: <strong>{profile.countries?.join(', ') || 'Wszystkie kraje'}</strong>
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Wylot z: <strong>{profile.departure_cities?.join(', ') || 'Dowolne'}</strong></span>
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>
+                    Wylot z: <strong>{profile.departure_cities?.join(', ') || 'Dowolne lotnisko'}</strong>
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Budżet max: <strong>{profile.budget_max ? `${profile.budget_max} PLN` : 'Brak limitu'}</strong></span>
+                  <Users className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>
+                    Osoby:{' '}
+                    <strong>
+                      {profile.adults ?? 2} dorosłych
+                      {profile.children ? `, ${profile.children} dzieci` : ''}
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Moon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>
+                    Pobyt:{' '}
+                    <strong>
+                      {profile.duration_min || 1} - {profile.duration_max || 14} nocy
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>
+                    Budżet max:{' '}
+                    <strong>
+                      {profile.budget_max ? `${profile.budget_max} PLN / os.` : 'Bez limitu'}
+                    </strong>
+                  </span>
                 </div>
               </div>
             </div>
@@ -153,12 +262,14 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
         </div>
       )}
 
-      {/* Create Modal */}
+      {/* Create / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-5 text-slate-100 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-6 space-y-5 text-slate-100 shadow-2xl my-8">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h3 className="text-lg font-bold">Nowy Profil Podróży</h3>
+              <h3 className="text-lg font-bold">
+                {editingProfileId ? 'Edytuj Profil Podróży' : 'Nowy Profil Podróży'}
+              </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
@@ -167,56 +278,151 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="space-y-4 text-xs">
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Nazwa profilu *</label>
                 <input
                   type="text"
                   required
-                  placeholder="np. Greckie wakacje Lato 2026"
+                  placeholder="np. Greckie wakacje 2+1 (7-10 dni)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
                 />
               </div>
 
+              {/* Multi-Select Countries */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Docelowy Kraj</label>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
-                >
-                  <option value="">Wszystkie kraje</option>
-                  {filterOptions?.countries.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <label className="block text-slate-400 font-semibold mb-1.5">
+                  Docelowe Kraje (wybierz wiele lub pozostaw puste dla wszystkich):
+                </label>
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto custom-scrollbar p-2 rounded-xl bg-slate-950/40 border border-slate-800">
+                  {availableCountries.map((c) => {
+                    const active = selectedCountries.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => toggleCountry(c)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all ${
+                          active
+                            ? 'bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-600/20'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>{c}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
+              {/* Multi-Select Departure Cities */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Miasto Wylotu</label>
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
-                >
-                  <option value="">Dowolne miasto</option>
-                  {filterOptions?.departure_cities.map((city) => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
+                <label className="block text-slate-400 font-semibold mb-1.5">
+                  Lotniska wylotu (zaznacz interesujące Cię):
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableCities.map((city) => {
+                    const active = selectedCities.includes(city);
+                    return (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => toggleCity(city)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all ${
+                          active
+                            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/20'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>{city}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">Budżet Maksymalny / os. (PLN)</label>
-                <input
-                  type="number"
-                  placeholder="np. 3500"
-                  value={budgetMax}
-                  onChange={(e) => setBudgetMax(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
-                />
+              {/* Adults & Children */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Liczba dorosłych</label>
+                  <select
+                    value={adults}
+                    onChange={(e) => setAdults(Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                  >
+                    <option value={1}>1 dorosły</option>
+                    <option value={2}>2 dorosłych</option>
+                    <option value={3}>3 dorosłych</option>
+                    <option value={4}>4 dorosłych</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Liczba dzieci</label>
+                  <select
+                    value={children}
+                    onChange={(e) => setChildren(Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                  >
+                    <option value={0}>0 dzieci</option>
+                    <option value={1}>1 dziecko</option>
+                    <option value={2}>2 dzieci</option>
+                    <option value={3}>3 dzieci</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Duration Min / Max */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Min nocy</label>
+                  <input
+                    type="number"
+                    placeholder="np. 7"
+                    value={durationMin}
+                    onChange={(e) => setDurationMin(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Max nocy</label>
+                  <input
+                    type="number"
+                    placeholder="np. 14"
+                    value={durationMax}
+                    onChange={(e) => setDurationMax(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Budget & Hotel Stars */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Budżet max / os. (PLN)</label>
+                  <input
+                    type="number"
+                    placeholder="np. 3500"
+                    value={budgetMax}
+                    onChange={(e) => setBudgetMax(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Min gwiazdek hotelu</label>
+                  <select
+                    value={hotelStarsMin}
+                    onChange={(e) => setHotelStarsMin(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                  >
+                    <option value="3">3 ★ i więcej</option>
+                    <option value="4">4 ★ i więcej</option>
+                    <option value="5">5 ★ (Luksus)</option>
+                  </select>
+                </div>
               </div>
 
               <div className="pt-3 flex justify-end gap-3 border-t border-slate-800">
@@ -231,7 +437,7 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-600/30"
                 >
-                  Zapisz Profil
+                  {editingProfileId ? 'Zapisz Zmiany' : 'Utwórz Profil'}
                 </button>
               </div>
             </form>
