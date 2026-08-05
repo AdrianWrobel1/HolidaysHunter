@@ -3,7 +3,11 @@ import logging
 import re
 from typing import Any
 
-from playwright.async_api import async_playwright
+try:
+    from playwright.async_api import async_playwright
+except ImportError:
+    async_playwright = None  # type: ignore[assignment]
+
 from app.providers.base import BaseProvider
 
 logger = logging.getLogger(__name__)
