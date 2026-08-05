@@ -88,7 +88,7 @@ export async function fetchTravelProfiles(): Promise<TravelProfile[]> {
   return res.json();
 }
 
-export async function fetchLiveOffers(params: OfferQueryParams = {}): Promise<{ status: string; message: string; imported_providers: string[] }> {
+export async function fetchLiveOffers(params: OfferQueryParams = {}): Promise<{ status: string; message: string; imported_providers: string[]; count?: number }> {
   const urlParams = new URLSearchParams();
   
   Object.entries(params).forEach(([key, value]) => {
