@@ -1,0 +1,172 @@
+3. TECHNOLOGY STACK
+3.1 Założenia
+
+Stack technologiczny został dobrany z myślą o prostocie rozwoju, wydajności oraz łatwym utrzymaniu projektu. Wszystkie technologie są popularne, dobrze udokumentowane i posiadają rozbudowany ekosystem.
+
+3.2 Frontend
+
+Framework: Next.js (React + TypeScript)
+
+Powody wyboru:
+
+nowoczesny ekosystem,
+świetne wsparcie dla PWA,
+szybkie tworzenie interfejsów,
+dobra organizacja projektu,
+łatwa rozbudowa.
+
+Frontend odpowiada wyłącznie za prezentację danych oraz komunikację z Backend API.
+
+Nie zawiera logiki biznesowej.
+
+3.3 Backend
+
+Framework: FastAPI (Python)
+
+Powody wyboru:
+
+bardzo dobra wydajność,
+łatwe tworzenie REST API,
+świetne wsparcie typowania,
+prosty scheduler,
+łatwa integracja z importerami.
+
+Backend odpowiada za:
+
+import danych,
+analizę,
+historię cen,
+Travel Score,
+alerty,
+udostępnianie API.
+3.4 Baza danych
+
+PostgreSQL
+
+Powody wyboru:
+
+stabilność,
+bardzo dobra wydajność,
+obsługa złożonych zapytań,
+indeksowanie,
+łatwa rozbudowa.
+
+Cała aplikacja korzysta z jednej wspólnej bazy danych.
+
+3.5 ORM
+
+SQLAlchemy
+
+ORM odpowiada za komunikację backendu z bazą danych.
+
+Migracje schematu realizowane są przy pomocy Alembic.
+
+3.6 Scheduler
+
+Import ofert wykonywany jest automatycznie przez scheduler uruchamiany wewnątrz backendu.
+
+Każdy operator może posiadać własny harmonogram importu.
+
+3.7 Powiadomienia
+
+Telegram Bot API.
+
+Cała logika decyzji znajduje się w backendzie.
+
+Telegram odpowiada jedynie za dostarczenie wiadomości.
+
+3.8 Deployment
+
+Architektura nie może być zależna od konkretnego hostingu.
+
+Projekt powinien działać bez zmian na:
+
+Railway,
+Render,
+VPS,
+Docker,
+lokalnym środowisku.
+4. STRUKTURA PROJEKTU
+backend/
+│
+├── app/
+│   ├── api/
+│   ├── core/
+│   ├── database/
+│   ├── models/
+│   ├── providers/
+│   ├── services/
+│   ├── scheduler/
+│   ├── notifications/
+│   ├── analytics/
+│   ├── scoring/
+│   └── utils/
+│
+├── tests/
+│
+└── requirements.txt
+
+frontend/
+│
+├── app/
+├── components/
+├── hooks/
+├── lib/
+├── services/
+├── types/
+└── public/
+Zasady struktury
+każdy operator znajduje się w osobnym katalogu,
+logika biznesowa znajduje się wyłącznie w services,
+modele danych znajdują się wyłącznie w models,
+endpointy API znajdują się wyłącznie w api,
+frontend nie zna struktury bazy danych.
+5. ZASADY IMPLEMENTACJI
+
+Każdy nowy moduł powinien:
+
+posiadać jedną odpowiedzialność,
+być możliwy do testowania,
+nie zależeć od konkretnego operatora,
+nie znać implementacji innych modułów.
+
+Każda funkcja powinna wykonywać jedną rzecz.
+
+Logika biznesowa nie może znajdować się:
+
+w endpointach API,
+w importerach,
+w komponentach React.
+6. STANDARDY KODU
+TypeScript Strict Mode.
+Python z pełnym typowaniem.
+Brak any bez uzasadnienia.
+Brak duplikacji logiki.
+Maksymalnie jedna odpowiedzialność na klasę.
+Czytelne nazwy zmiennych i funkcji.
+Konfiguracja w .env.
+Brak hardcode'owanych wartości.
+Wszystkie błędy logowane.
+Każda zmiana przechodzi przez testy.
+7. ROADMAP MVP
+Etap 1
+konfiguracja projektu,
+baza danych,
+model Offer,
+pierwszy importer.
+Etap 2
+pozostali operatorzy,
+normalizacja,
+historia cen.
+Etap 3
+Explorer,
+filtry,
+Backend API.
+Etap 4
+Travel Profiles,
+Travel Score,
+Alert Engine.
+Etap 5
+Telegram,
+testy,
+optymalizacja.

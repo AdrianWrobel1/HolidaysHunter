@@ -1,0 +1,32 @@
+[
+  {
+    "name": "oui_uid",
+    "value": "f459d38e892d4f97bbb404139738ed63_",
+    "domain": "www.itaka.pl",
+    "path": "/",
+    "expires": 1820494294.909308,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Strict"
+  },
+  {
+    "name": "_vwo_uuid_v2",
+    "value": "D8C9DA10C37131F01ED7F207D7F028F0A|6c8564b74336e50ce4f855ec59646f1d",
+    "domain": ".itaka.pl",
+    "path": "/",
+    "expires": 1817556695,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "cookieyes-consent",
+    "value": "consentid:OFNKbllsejNCWHJUSjJEODBRYnlDMzQyYXBDNkpoRVk,consent:no,action:,necessary:yes,functional:no,analytics:no,performance:no,advertisement:no,other:no",
+    "domain": ".itaka.pl",
+    "path": "/",
+    "expires": 1817470297,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Strict"
+  }
+]

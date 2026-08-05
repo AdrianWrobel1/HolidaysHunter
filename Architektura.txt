@@ -1,0 +1,173 @@
+2. SYSTEM ARCHITECTURE
+2.1 Architektura wysokiego poziomu
+
+System składa się z dwóch głównych części:
+
+Backend – odpowiada za import danych, przetwarzanie ofert, analizę rynku, przechowywanie danych oraz udostępnianie API.
+Frontend (PWA) – odpowiada wyłącznie za prezentację danych oraz komunikację z backendem.
+
+Frontend nie komunikuje się bezpośrednio z API operatorów ani z bazą danych.
+
+Travel APIs
+     │
+     ▼
+ Importers
+     │
+     ▼
+Normalization
+     │
+     ▼
+ Database
+     │
+ ┌───┴──────────────┐
+ ▼                  ▼
+Analysis        Backend API
+ ▼                  │
+Travel Score        ▼
+ ▼              Frontend
+Alert Engine         │
+ ▼                   ▼
+Telegram         Użytkownik
+2.2 Główne moduły
+Importers
+
+Odpowiadają za pobieranie ofert z API operatorów.
+
+Każdy operator posiada własny moduł implementujący wspólny interfejs.
+
+Importer odpowiada wyłącznie za:
+
+komunikację z API,
+autoryzację,
+paginację,
+pobranie danych,
+podstawową walidację odpowiedzi.
+
+Importer nie:
+
+zapisuje danych do bazy,
+oblicza Travel Score,
+tworzy historii cen,
+wysyła powiadomień.
+Normalization
+
+Każdy operator zwraca dane w innym formacie.
+
+Moduł normalizacji mapuje dane operatora do wspólnego modelu Offer.
+
+Dzięki temu cała aplikacja operuje na jednym formacie danych, niezależnie od źródła.
+
+Persistence
+
+Po normalizacji system:
+
+wykrywa nowe oferty,
+aktualizuje istniejące,
+zapisuje historię cen,
+oznacza oferty jako niedostępne, jeśli zniknęły z importu.
+Analysis Engine
+
+Po zapisaniu danych wykonywana jest analiza rynku.
+
+Silnik analizuje między innymi:
+
+historię cen,
+zmiany względem poprzedniego importu,
+zgodność z profilami podróży,
+statystyki hoteli,
+trendy cenowe.
+Travel Score Engine
+
+Silnik oblicza atrakcyjność każdej oferty w skali 0–100.
+
+Travel Score jest wyliczany po każdym imporcie i zapisywany w bazie danych.
+
+Frontend nigdy nie oblicza Travel Score samodzielnie.
+
+Alert Engine
+
+Na podstawie Travel Score, historii cen oraz Travel Profiles system decyduje, czy oferta powinna wygenerować powiadomienie.
+
+Alert Engine nie wysyła wiadomości.
+
+Tworzy jedynie zdarzenie (AlertEvent).
+
+Notification Service
+
+Odpowiada za wysyłanie powiadomień.
+
+Pierwszym kanałem komunikacji jest Telegram.
+
+Architektura umożliwia późniejsze dodanie kolejnych kanałów (np. e-mail lub push) bez zmian w logice biznesowej.
+
+Backend API
+
+Backend udostępnia REST API wykorzystywane przez frontend.
+
+Frontend korzysta wyłącznie z tego API.
+
+Nie posiada własnej logiki biznesowej.
+
+2.3 Przepływ danych
+
+Każdy import przechodzi przez ten sam pipeline.
+
+Scheduler
+    │
+    ▼
+Importer
+    │
+    ▼
+Normalizer
+    │
+    ▼
+Database
+    │
+    ▼
+Price History
+    │
+    ▼
+Analysis
+    │
+    ▼
+Travel Score
+    │
+    ▼
+Alert Engine
+    │
+    ▼
+Telegram
+
+Każdy etap odpowiada za jedną odpowiedzialność i może być rozwijany niezależnie.
+
+2.4 Scheduler
+
+Scheduler uruchamia importery automatycznie według ustalonego harmonogramu.
+
+Każdy operator może posiadać własną częstotliwość importu.
+
+Import jednego operatora nie może blokować pozostałych.
+
+Błąd jednego importera nie może zatrzymać działania całego systemu.
+
+2.5 Rozszerzalność
+
+Dodanie nowego operatora powinno wymagać:
+
+utworzenia nowego importera,
+implementacji mapowania do modelu Offer,
+dodania konfiguracji schedulera.
+
+Pozostałe moduły systemu nie powinny wymagać zmian.
+
+2.6 Zasady architektoniczne
+
+System projektowany jest zgodnie z następującymi zasadami:
+
+pojedyncza odpowiedzialność każdego modułu,
+brak zależności pomiędzy importerami,
+wspólny model danych dla wszystkich operatorów,
+logika biznesowa wyłącznie w backendzie,
+frontend odpowiada jedynie za prezentację danych,
+każdy moduł może być testowany niezależnie,
+komunikacja pomiędzy modułami odbywa się przez jasno zdefiniowane interfejsy.

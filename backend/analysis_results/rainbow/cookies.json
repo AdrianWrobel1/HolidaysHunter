@@ -1,0 +1,132 @@
+[
+  {
+    "name": "PersistentId",
+    "value": "019fd1fa-4d85-720a-a4d2-f741c51a365a",
+    "domain": ".r.pl",
+    "path": "/",
+    "expires": 1817470269.763826,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "RDeviceType",
+    "value": "D",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "RABTests",
+    "value": "eyJ0ZXN0cyI6W3sibmFtZSI6InJlekJveCIsImRldmljZXMiOlsiRCIsIk0iXSwicGFnZXNUeXBlcyI6WyJyZXplcndhY2phIl0sInBhdGhQYXR0ZXJuIjpudWxsLCJncm91cCI6bnVsbCwidmFsdWUiOiJ2YXIiLCJrZXkiOiJyZXpCb3g6dmFyIn0seyJuYW1lIjoic2VhcmNoIiwiZGV2aWNlcyI6WyJBIiwiRCIsIk0iLCJUIl0sInBhZ2VzVHlwZXMiOlsic3p1a2FqIl0sInBhdGhQYXR0ZXJuIjpudWxsLCJncm91cCI6IlJla29tZW5kYWNqZSIsInZhbHVlIjoiZGVmYXVsdCIsImtleSI6InNlYXJjaDpkZWZhdWx0In1dfQ==",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "RAB",
+    "value": "rezBox:var|search:default",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "i18n_redirected",
+    "value": "pl",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": 1817470270,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "KlientIdSchowek",
+    "value": "049f7e0b-e5bc-4f15-8c09-a96ea15db151",
+    "domain": ".r.pl",
+    "path": "/",
+    "expires": 1817470270,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "liczbaPokoi",
+    "value": "1",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": 1820494270.953412,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "dowolnaLiczbaPokoi",
+    "value": "false",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": 1820494270.953595,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "g_state",
+    "value": "{\"i_l\":0,\"i_ll\":1785934271245,\"i_b\":\"odx9xT6bzZjKIqtECAioBErplS2t0b0wRxiGv2fsOZA\",\"i_e\":{\"enable_itp_optimization\":24},\"i_et\":1785934271245}",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": 1801486271,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "browser_type_ec",
+    "value": "Regular_browser",
+    "domain": "r.pl",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_fbp",
+    "value": "fb.1.1785934272810.830673797811339416",
+    "domain": ".r.pl",
+    "path": "/",
+    "expires": 1793710272,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "order_cid",
+    "value": "GA1.1.1699745075.1785934275",
+    "domain": ".r.pl",
+    "path": "/",
+    "expires": 1820494274.884204,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "order_sid",
+    "value": "GS1.1.1785934272",
+    "domain": ".r.pl",
+    "path": "/",
+    "expires": 1820494274.884402,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  }
+]

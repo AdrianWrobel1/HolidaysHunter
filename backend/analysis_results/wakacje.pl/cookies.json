@@ -1,0 +1,194 @@
+[
+  {
+    "name": "unleash-session-id",
+    "value": "856142",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1794574281.740302,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "unleash-toggles",
+    "value": "APP_C_TABW2.b!APP_C_TABW3.b!APP_C_TABW4.d!APP_C_TABW159.b!PS_DEBUGGER.0!PS_dev-links.0!RS_AM-1571.1!RS_ECWAK-6023.0!S_ABTWAK_22.b!S_ABTWAK_26.a!S_ABTWAK_29.a!S_ABTWAK_41.a!S_TABW90.c!S_TABW96.c!S_TABW112.a!S_TABW128.a!S_TABW131.c!S_TABW157.a!S_TABW158.a!S_TABW159.a!S_TABW162.a!C_TABW78.b!C_TABW84.b!C_TABW91.b!C_TABW118.a!C_TABW121.a!C_TABW129.b!C_TABW134.b!C_TABW138.b!C_TABW142.b!C_TABW146.c!C_TABW147.a!C_TABW149.b!C_TABW153.b!C_TABW164.a!C_TABW166.a!P_HELPER.0",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1794574283,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "unleash-forced-toggles",
+    "value": "",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1794574281.741349,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "unleash-context",
+    "value": "%7B%22sessionId%22%3A%22856142%22%2C%22properties%22%3A%7B%22browser%22%3A%22chrome%22%2C%22os%22%3A%22windows%22%7D%7D",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1794574281.741381,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "WPabs",
+    "value": "2c49d9",
+    "domain": ".wakacje.pl",
+    "path": "/",
+    "expires": 1819630282,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "split_number",
+    "value": "4",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1791118282,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "split_number_100",
+    "value": "89",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1791118282,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "listingPageCounter",
+    "value": "1",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1793710282,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "uListingPageViews",
+    "value": "1",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1785937882,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "clipbc",
+    "value": "0",
+    "domain": "www.wakacje.pl",
+    "path": "/",
+    "expires": 1791118283,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "lastSourceMedium",
+    "value": "direct / none",
+    "domain": ".wakacje.pl",
+    "path": "/",
+    "expires": 1801486283,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "statid",
+    "value": "37612bf8b383a7ee4003f9da92770db2:5fd5a5:1785934284:v3",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1819630284.590183,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "statidp",
+    "value": "37612bf8b383a7ee4003f9da92770db2:5fd5a5:1785934284:v3",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1820494283.952531,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://wakacje.pl",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "BDh",
+    "value": "qlYyMjAyM7BQsqpWMjJONTOyNFSyMqytBQAAAP//AQAA//8=",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1820494283.952667,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BDhs",
+    "value": "qlYyMjAyM7BQsqpWMjEyVbIyrNWBChmYIgnWAgAAAP//AQAA//8=",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1820494283.952712,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "STvisit",
+    "value": "d28010d14d340bc3b0ff88f69e325b49:ac7c85:1785934284:1785934284:6::::1:1::v3",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1786020683.952755,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "STpage",
+    "value": "wakacjepl:https%3A%2F%2Fwww.wakacje.pl%2Fwczasy%2F:1785934284:d64280c237b678def2d2:v1",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1786020683.971356,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "WPdp",
+    "value": "g57HBdwMGUVXU4VBF4VXQcbRVZEAVxTRQ8VPGgVSxdUFEVeAxcNRW4GOhcbRVNHRQ8GSxdQCxcNVhkVCkcVXQQbRUFERQ8GUA0CXgYDVQ0DUw0AGhkVM2UVXU4VBF4VXQQbRVZEAVxTRQ8VPGgVSxdUFEVeAxcNRW5qRRkVAUUVXQQbRVJbRQ8GSxdaFRcNVhkVE0YVXQQAXwAOVAEFXwEDXwJKSxdgN3gVXU4VBF4VXQcbRVZEAVxTRQ8VPGgVSxdUFEVeAxcNRW4GOhcbRVNHRQ8GSxdQCxcNVhkVCkcVXQQbRUFERQ8GUA0CXgYDVQ0DUw0AGkg=",
+    "domain": ".wakacje.pl",
+    "path": "/",
+    "expires": 1819630284,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "WPdp",
+    "value": "g57HBdwMGUVXU4VBF4VXQcbRVZEAVxTRQ8VPGgVSxdUFEVeAxcNRW4GOhcbRVNHRQ8GSxdQCxcNVhkVCkcVXQQbRUFERQ8GUA0CXgYDVQ0DUw0AGhkVM2UVXU4VBF4VXQQbRVZEAVxTRQ8VPGgVSxdUFEVeAxcNRW5qRRkVAUUVXQQbRVJbRQ8GSxdaFRcNVhkVE0YVXQQAXwAOVAEFXwEDXwJKSxdgN3gVXU4VBF4VXQcbRVZEAVxTRQ8VPGgVSxdUFEVeAxcNRW4GOhcbRVNHRQ8GSxdQCxcNVhkVCkcVXQQbRUFERQ8GUA0CXgYDVQ0DUw0AGkg=",
+    "domain": ".wp.pl",
+    "path": "/",
+    "expires": 1819630284,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  }
+]

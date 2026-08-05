@@ -1,0 +1,116 @@
+1. PRODUCT REQUIREMENTS DOCUMENT
+1. Cel projektu
+
+HolidaysHunter to prywatna aplikacja webowa typu PWA służąca do wyszukiwania, monitorowania i analizowania ofert wakacyjnych z wielu biur podróży. System ma działać automatycznie, eliminując konieczność codziennego przeglądania stron operatorów. Użytkownik otrzymuje jedynie oferty, które spełniają jego wymagania lub zostały ocenione jako wyjątkowo atrakcyjne.
+
+Projekt jest tworzony wyłącznie na własny użytek, jednak architektura i jakość kodu mają odpowiadać standardom produkcyjnym.
+
+2. Główne założenia
+aplikacja działa jako PWA na komputerze i telefonie,
+backend działa 24/7,
+oferty są importowane automatycznie przez scheduler,
+dane przechowywane są w lokalnej bazie danych,
+wszystkie oferty są normalizowane do jednego modelu,
+system przechowuje historię zmian cen,
+Telegram jest głównym kanałem powiadomień,
+frontend korzysta wyłącznie z własnego API backendu.
+3. Cel biznesowy
+
+Celem aplikacji nie jest wyświetlenie wszystkich ofert.
+
+Celem jest znalezienie najlepszych okazji zgodnych z preferencjami użytkownika oraz poinformowanie o nich zanim zostaną zauważone podczas ręcznego przeglądania stron.
+
+4. Zakres MVP
+Explorer
+wyszukiwanie ofert,
+filtrowanie,
+sortowanie,
+szczegóły oferty,
+przekierowanie do operatora.
+Travel Profiles
+
+Możliwość tworzenia zapisanych profili wyszukiwania.
+
+Profil określa między innymi:
+
+kraje,
+regiony,
+lotniska,
+termin,
+budżet,
+długość pobytu,
+liczbę osób,
+standard hotelu,
+wyżywienie,
+operatorów.
+
+Każdy profil jest monitorowany automatycznie.
+
+Price History
+
+Dla każdej oferty przechowywana jest historia zmian ceny wraz z datą wykrycia zmiany.
+
+Smart Alerts
+
+System wysyła powiadomienia wyłącznie wtedy, gdy wystąpi istotne zdarzenie.
+
+Przykładowe zdarzenia:
+
+nowa oferta spełniająca profil,
+spadek ceny,
+najniższa cena od X dni,
+wysoki Travel Score,
+ponowne pojawienie się obserwowanej oferty.
+Travel Score
+
+Każda oferta otrzymuje ocenę atrakcyjności w skali 0–100.
+
+W pierwszej wersji wynik uwzględnia:
+
+historię ceny,
+procentowy spadek ceny,
+ocenę hotelu,
+standard hotelu,
+wyżywienie,
+sezon,
+zgodność z profilem użytkownika.
+5. Źródła danych
+
+Pierwsza wersja obsługuje:
+
+Itaka,
+TUI,
+Rainbow,
+Wakacje.pl.
+
+Każdy operator posiada własny moduł importujący dane.
+
+Jeżeli operator udostępnia API, nie stosujemy scrapowania HTML.
+
+6. Wymagania niefunkcjonalne
+łatwe dodawanie nowych operatorów,
+brak duplikacji logiki,
+modularna architektura,
+możliwość zmiany hostingu bez zmian w kodzie aplikacji,
+szybkie wyszukiwanie,
+czytelny kod,
+łatwe testowanie.
+7. Poza zakresem MVP
+
+Projekt nie obejmuje:
+
+rezerwacji wycieczek,
+płatności,
+wielu użytkowników,
+aplikacji natywnej,
+AI przewidującego ceny,
+publicznego API.
+8. Kryteria sukcesu
+
+Projekt zostanie uznany za gotowy, jeżeli:
+
+import wszystkich operatorów działa automatycznie,
+historia cen jest kompletna,
+profile podróży generują poprawne powiadomienia,
+wyszukiwarka działa płynnie,
+dodanie nowego operatora wymaga jedynie implementacji nowego importera.

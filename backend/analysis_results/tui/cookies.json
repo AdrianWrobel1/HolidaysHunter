@@ -1,0 +1,52 @@
+[
+  {
+    "name": "AWSALB",
+    "value": "gfkcDW5Gqb9Pi57H+mruRIDygMaHBOLcANIRuP5N5XBgUKSk7zpJickCbrQDf8six/QrudnfbDOirjR1Z889AIje6Att5zwrJ+bMOIY+BWUWfe4FnJXuWmIS/TQk",
+    "domain": "www.tui.pl",
+    "path": "/",
+    "expires": 1786539059.245898,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "AWSALBCORS",
+    "value": "gfkcDW5Gqb9Pi57H+mruRIDygMaHBOLcANIRuP5N5XBgUKSk7zpJickCbrQDf8six/QrudnfbDOirjR1Z889AIje6Att5zwrJ+bMOIY+BWUWfe4FnJXuWmIS/TQk",
+    "domain": "www.tui.pl",
+    "path": "/",
+    "expires": 1786539059.246048,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "JSESSIONID",
+    "value": "4D1E1C8FE7AD45CB3977DA2B3FEEFDA3",
+    "domain": "www.tui.pl",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "jud2",
+    "value": "ZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKcGMzTWlPaUpoYm05dWVXMXZkWE1pTENKemRXSWlPaUoxYzJWeWFXNW1ieUlzSW5kcGMyaHNhWE4wVkc5clpXNGlPaUkxTlRGbE1EUTVPQzFoTTJaa0xUUXpPREF0WWpJeE1TMWhNelV6WW1SaFpXUTFPR01pTENKc1lXNW5kV0ZuWlNJNkluQnNJaXdpYzJWbmJXVnVkSE1pT2lJaUxDSnliMnhsY3lJNld5SkRWVk5VVDAxRlVpSmRMQ0pwWVhRaU9qRTNPRFU1TXpReU5Ua3NJbVY0Y0NJNk1UYzROVGt6TnpnMU9YMC5BV2NYUUl6Wlp1clRIRUZ3VFBldDFlcl9lTnZKczV5eG5MUFNFQ3lUYWZz",
+    "domain": "www.tui.pl",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Strict"
+  },
+  {
+    "name": "g_state",
+    "value": "{\"i_l\":0,\"i_ll\":1785934259925,\"i_b\":\"uf8aSHYrozzLcAVPvjQIuDJhPgHonLnyrBLJKiXlWeY\",\"i_e\":{\"enable_itp_optimization\":24},\"i_et\":1785934259925}",
+    "domain": "www.tui.pl",
+    "path": "/",
+    "expires": 1801486259,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]
