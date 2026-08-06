@@ -60,6 +60,48 @@ class TestTuiNormalizer:
         assert result.offer_url == "https://www.tui.pl/oferty/tui-blue-12345"
         assert result.image_url == "https://images.tui.pl/magic.jpg"
 
+    def test_normalizes_live_production_next_data_structure(self) -> None:
+        live_raw = {
+            "offerCode": "AYT43083",
+            "hotelName": "Sun City Apartments & Hotel",
+            "hotelStandard": 3.5,
+            "tripAdvisorRating": 3.9,
+            "discountPerPersonPrice": 958,
+            "discountFullPrice": 1916,
+            "departureDate": "12.12.2026",
+            "returnDate": "19.12.2026",
+            "durationNights": 7,
+            "departureAirport": "Katowice",
+            "boardType": "Bez wyżywienia",
+            "participants": "2 Dorosłych + 0 Dzieci",
+            "breadcrumbs": [
+                {"label": "Turcja"},
+                {"label": "Riwiera Turecka"}
+            ],
+            "imageUrl": "https://r.cdn.redgalaxy.com/scale/o2/TUI/hotels/AYT43083/S24/25247810.jpg",
+            "offerUrl": "/wypoczynek/turcja/riwiera-turecka/sun-city-apartments-hotel-ayt43083"
+        }
+        result = self.normalizer.normalize(live_raw)
+
+        assert result is not None
+        assert result.external_id == "AYT43083"
+        assert result.provider == Provider.TUI
+        assert result.hotel_name == "Sun City Apartments & Hotel"
+        assert result.country == "Turcja"
+        assert result.region == "Riwiera Turecka"
+        assert result.hotel_stars == 3.5
+        assert result.hotel_rating == 3.9
+        assert result.price_per_person == Decimal("958")
+        assert result.price_total == Decimal("1916")
+        assert result.departure_date.isoformat() == "2026-12-12"
+        assert result.return_date.isoformat() == "2026-12-19"
+        assert result.departure_city == "Katowice"
+        assert result.adults == 2
+        assert result.children == 0
+        assert result.meal_type == MealType.SELF_CATERING
+        assert result.offer_url == "https://www.tui.pl/wypoczynek/turcja/riwiera-turecka/sun-city-apartments-hotel-ayt43083"
+        assert result.image_url == "https://r.cdn.redgalaxy.com/scale/o2/TUI/hotels/AYT43083/S24/25247810.jpg"
+
     def test_returns_none_for_missing_id(self) -> None:
         raw = self._make_raw_offer()
         del raw["offerCode"]

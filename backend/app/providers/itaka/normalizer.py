@@ -73,9 +73,16 @@ TRANSPORT_TYPE_MAP: dict[str, TransportType] = {
     "flight": TransportType.FLIGHT,
     "autokar": TransportType.BUS,
     "bus": TransportType.BUS,
-    "dojazd własny": TransportType.OWN,
-    "dojazd wlasny": TransportType.OWN,
-    "own": TransportType.OWN,
+    "dojazd własny": TransportType.SELF_TRANSPORT,
+    "dojazd wlasny": TransportType.SELF_TRANSPORT,
+    "własny": TransportType.SELF_TRANSPORT,
+    "wlasny": TransportType.SELF_TRANSPORT,
+    "own": TransportType.SELF_TRANSPORT,
+    "self_transport": TransportType.SELF_TRANSPORT,
+    "pociąg": TransportType.TRAIN,
+    "train": TransportType.TRAIN,
+    "rejs": TransportType.CRUISE,
+    "cruise": TransportType.CRUISE,
 }
 
 
@@ -97,13 +104,25 @@ class ItakaNormalizer(BaseNormalizer):
     """Maps ITAKA raw __NEXT_DATA__ JSON offer to NormalizedOffer schema."""
 
     def normalize(self, raw_offer: dict[str, Any]) -> NormalizedOffer | None:
-        offer_id = raw_offer.get("id") or raw_offer.get("offerId") or raw_offer.get("supplierObjectId")
+        participant_groups = raw_offer.get("participantGroups", [])
+        pg0 = participant_groups[0] if participant_groups and isinstance(participant_groups[0], dict) else {}
+
+        offer_id = (
+            raw_offer.get("id")
+            or raw_offer.get("offerId")
+            or raw_offer.get("supplierObjectId")
+            or pg0.get("rateId")
+        )
         supplier_obj_id = raw_offer.get("supplierObjectId", "")
         if not offer_id:
             logger.warning("ITAKA [normalizer]: skipping offer without ID")
             return None
 
-        raw_price = raw_offer.get("price") or raw_offer.get("priceTotal")
+        raw_price = (
+            raw_offer.get("price")
+            or raw_offer.get("priceTotal")
+            or pg0.get("price")
+        )
         if raw_price is None:
             logger.warning("ITAKA [normalizer]: skipping offer %s — missing price", offer_id)
             return None
@@ -114,27 +133,43 @@ class ItakaNormalizer(BaseNormalizer):
             return None
 
         # React Query state uses grosze (e.g. 599800 grosze -> 5998.00 PLN)
+        is_grosze = False
         if parsed_price >= Decimal("100000"):
+            is_grosze = True
             price_total = (parsed_price / Decimal("100")).quantize(Decimal("0.01"))
         else:
             price_total = parsed_price.quantize(Decimal("0.01"))
 
-        participants = raw_offer.get("participants", [])
-        adults = raw_offer.get("adults") or len([p for p in participants if p.get("type") == "adult"]) or 2
-        children = raw_offer.get("children") or len([p for p in participants if p.get("type") == "child"]) or 0
+        participants = raw_offer.get("participants") or pg0.get("participants", [])
+        adults = (
+            raw_offer.get("adults")
+            or len([p for p in participants if isinstance(p, dict) and p.get("type") == "adult"])
+            or 2
+        )
+        children = (
+            raw_offer.get("children")
+            or len([p for p in participants if isinstance(p, dict) and p.get("type") == "child"])
+            or 0
+        )
 
         raw_ppp = raw_offer.get("pricePerPerson")
         price_per_person: Decimal | None = None
         if raw_ppp is not None:
             parsed_ppp = _parse_decimal(raw_ppp)
             if parsed_ppp:
-                price_per_person = (parsed_ppp / Decimal("100")).quantize(Decimal("0.01")) if parsed_ppp >= Decimal("100000") else parsed_ppp.quantize(Decimal("0.01"))
-        elif participants and participants[0].get("price"):
+                if is_grosze or parsed_ppp >= Decimal("100000"):
+                    price_per_person = (parsed_ppp / Decimal("100")).quantize(Decimal("0.01"))
+                else:
+                    price_per_person = parsed_ppp.quantize(Decimal("0.01"))
+        elif participants and isinstance(participants[0], dict) and participants[0].get("price"):
             p_val = _parse_decimal(participants[0].get("price"))
             if p_val:
-                price_per_person = (p_val / Decimal("100")).quantize(Decimal("0.01")) if p_val >= Decimal("100000") else p_val.quantize(Decimal("0.01"))
+                if is_grosze or p_val >= Decimal("100000"):
+                    price_per_person = (p_val / Decimal("100")).quantize(Decimal("0.01"))
+                else:
+                    price_per_person = p_val.quantize(Decimal("0.01"))
         elif (adults + children) > 0:
-            price_per_person = (price_total / (adults + children)).quantize(Decimal("0.01"))
+            price_per_person = (price_total / Decimal(adults + children)).quantize(Decimal("0.01"))
 
         if price_per_person is None:
             logger.warning("ITAKA: skipping offer %s — cannot determine per-person price", offer_id)
@@ -143,9 +178,25 @@ class ItakaNormalizer(BaseNormalizer):
         segments = raw_offer.get("segments", [])
         flight_seg = next((s for s in segments if isinstance(s, dict) and s.get("type") == "flight"), {})
         hotel_seg = next((s for s in segments if isinstance(s, dict) and s.get("type") == "hotel"), {})
+        trip_seg = next((s for s in segments if isinstance(s, dict) and s.get("type") in ("trip", "circuit", "tour")), {})
+        main_content_seg = hotel_seg or trip_seg or (segments[0] if segments and isinstance(segments[0], dict) else {})
 
-        departure_date = _parse_date(hotel_seg.get("beginDate") or flight_seg.get("beginDateTime") or raw_offer.get("departureDate") or raw_offer.get("dateFrom"))
-        return_date = _parse_date(hotel_seg.get("endDate") or flight_seg.get("endDateTime") or raw_offer.get("returnDate") or raw_offer.get("dateTo"))
+        departure_date = _parse_date(
+            hotel_seg.get("beginDate")
+            or trip_seg.get("beginDate")
+            or flight_seg.get("beginDate")
+            or flight_seg.get("beginDateTime")
+            or raw_offer.get("departureDate")
+            or raw_offer.get("dateFrom")
+        )
+        return_date = _parse_date(
+            hotel_seg.get("endDate")
+            or trip_seg.get("endDate")
+            or flight_seg.get("endDate")
+            or flight_seg.get("endDateTime")
+            or raw_offer.get("returnDate")
+            or raw_offer.get("dateTo")
+        )
 
         dur_val = raw_offer.get("duration") or raw_offer.get("nights")
         if isinstance(dur_val, int):
@@ -162,7 +213,7 @@ class ItakaNormalizer(BaseNormalizer):
         if return_date is None:
             return_date = departure_date + timedelta(days=duration)
 
-        content = hotel_seg.get("content", {}) if isinstance(hotel_seg, dict) else {}
+        content = main_content_seg.get("content", {}) if isinstance(main_content_seg, dict) else {}
         hotel_obj = raw_offer.get("hotel") if isinstance(raw_offer.get("hotel"), dict) else {}
         hotel_name = content.get("title") or raw_offer.get("hotelName") or hotel_obj.get("name") or raw_offer.get("title", "Unknown Hotel")
 
@@ -182,18 +233,12 @@ class ItakaNormalizer(BaseNormalizer):
         cntry_item = next((item for item in geo_ids if isinstance(item, dict) and item.get("type") == "country"), {})
         rgn_item = next((item for item in geo_ids if isinstance(item, dict) and item.get("type") in ("province", "region")), {})
 
-        # --- Country resolution (priority: geographicalIdentifiers[country] > raw_offer.country > fallback) ---
-        # NOTE: flight_seg.destination is NOT used as a country source because it often contains
-        # city names (e.g. "Malaga") not country names. It is used for region resolution instead.
         raw_country_from_geo = cntry_item.get("title") if cntry_item else None
         raw_country_from_offer = raw_offer.get("country")
         raw_country = raw_country_from_geo or raw_country_from_offer
 
         canonical_country = normalize_country_name(raw_country) if raw_country else "Inne"
 
-        # If the "country" resolved from geo/offer data is not a real country (e.g. "Malaga"),
-        # normalize_country_name will map it via COUNTRY_CANONICAL_MAP (e.g. malaga -> Hiszpania).
-        # Log a diagnostic message when the raw value differs from the canonical one.
         if raw_country and canonical_country.lower() != (raw_country or "").lower():
             logger.debug(
                 "ITAKA [normalizer]: offer %s — raw_country=%r normalized to canonical=%r",
@@ -203,7 +248,6 @@ class ItakaNormalizer(BaseNormalizer):
         raw_region = rgn_item.get("title") if rgn_item else None
         if not raw_region:
             raw_region = raw_offer.get("region")
-        # Use flight destination as region fallback only (not as country)
         if not raw_region and isinstance(flight_seg, dict):
             dest_title = flight_seg.get("destination", {}).get("title")
             if dest_title and dest_title.lower() != canonical_country.lower():
@@ -222,7 +266,15 @@ class ItakaNormalizer(BaseNormalizer):
 
         departure_city = (flight_seg.get("departure", {}).get("title") if isinstance(flight_seg, dict) else None) or raw_offer.get("departureCity") or raw_offer.get("departureFrom") or "Warszawa"
 
-        meal_title = (hotel_seg.get("meal", {}).get("title") if isinstance(hotel_seg, dict) else None) or raw_offer.get("boardType") or raw_offer.get("mealType")
+        hotel_pgs = main_content_seg.get("participantGroups", []) if isinstance(main_content_seg, dict) else []
+        hotel_pg0_meal = hotel_pgs[0].get("meal", {}).get("title") if hotel_pgs and isinstance(hotel_pgs[0], dict) else None
+
+        meal_title = (
+            hotel_pg0_meal
+            or (main_content_seg.get("meal", {}).get("title") if isinstance(main_content_seg, dict) else None)
+            or raw_offer.get("boardType")
+            or raw_offer.get("mealType")
+        )
         transport_title = (flight_seg.get("type") if isinstance(flight_seg, dict) else None) or raw_offer.get("transportType") or raw_offer.get("transport")
 
         hotel_slug = _slugify(hotel_name)

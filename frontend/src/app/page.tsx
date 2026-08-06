@@ -15,10 +15,12 @@ import { OfferModal } from '@/components/OfferModal';
 import { ProfilesView } from '@/components/ProfilesView';
 import { AlertsView } from '@/components/AlertsView';
 import { SeasonalAnalyticsView } from '@/components/SeasonalAnalyticsView';
+import { OfferAnalyzerView } from '@/components/OfferAnalyzerView';
+import { ResearchWorkspaceView } from '@/components/ResearchWorkspaceView';
 import { Compass, ChevronLeft, ChevronRight, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'explorer' | 'profiles' | 'alerts' | 'seasonal'>('explorer');
+  const [activeTab, setActiveTab] = useState<'explorer' | 'profiles' | 'alerts' | 'seasonal' | 'analyzer' | 'workspace'>('workspace');
 
   // Explorer Data State
   const [offersData, setOffersData] = useState<OffersListResponse | null>(null);
@@ -316,6 +318,12 @@ export default function Home() {
           </div>
         )}
 
+        {(activeTab === 'workspace' || activeTab === 'analyzer') && (
+          <div className="animate-fadeIn">
+            <ResearchWorkspaceView />
+          </div>
+        )}
+
         {activeTab === 'profiles' && (
           <div className="animate-fadeIn">
             <ProfilesView filterOptions={filterOptions} />
@@ -330,7 +338,15 @@ export default function Home() {
 
         {activeTab === 'seasonal' && (
           <div className="animate-fadeIn">
-            <SeasonalAnalyticsView />
+            <SeasonalAnalyticsView
+              onNavigateExplorer={(navParams) => {
+                setQueryParams((prev) => ({ ...prev, ...navParams, page: 1 }));
+                setActiveTab('explorer');
+              }}
+              onNavigateWorkspace={() => {
+                setActiveTab('workspace');
+              }}
+            />
           </div>
         )}
       </main>

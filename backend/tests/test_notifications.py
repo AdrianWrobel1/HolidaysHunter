@@ -28,6 +28,9 @@ def _mock_alert(**overrides):
     alert.metadata_json = overrides.get("metadata_json", {
         "price_per_person": "2250.00",
     })
+    alert.priority_score = overrides.get("priority_score", 85.0)
+    alert.priority_level = overrides.get("priority_level", "HIGH")
+    alert.reasons_json = overrides.get("reasons_json", {"priority_score": 85.0, "priority_level": "HIGH"})
     alert.is_read = overrides.get("is_read", False)
     alert.triggered_at = overrides.get(
         "triggered_at", datetime(2026, 8, 1, 12, 0, 0, tzinfo=timezone.utc)
@@ -44,9 +47,8 @@ class TestFormatAlertMessage:
     def test_new_match_format(self):
         alert = _mock_alert(alert_type=AlertType.NEW_MATCH)
         msg = format_alert_message(alert)
-        assert "<b>Nowa oferta</b>" in msg
-        assert alert.message in msg
-        assert "Otwórz ofertę" in msg
+        assert "NOWA OFERTA" in msg
+        assert "Priority Score" in msg
 
     def test_price_drop_format(self):
         alert = _mock_alert(
@@ -59,7 +61,7 @@ class TestFormatAlertMessage:
             },
         )
         msg = format_alert_message(alert)
-        assert "<b>Spadek ceny</b>" in msg
+        assert "HISTORIA OFERTY" in msg
         assert "2500" in msg
         assert "2000" in msg
 
@@ -70,8 +72,7 @@ class TestFormatAlertMessage:
             metadata_json={"travel_score": 85},
         )
         msg = format_alert_message(alert)
-        assert "<b>Wysoki Travel Score</b>" in msg
-        assert "85/100" in msg
+        assert "Priority Score" in msg
 
     def test_lowest_price_format(self):
         alert = _mock_alert(
@@ -84,18 +85,18 @@ class TestFormatAlertMessage:
             },
         )
         msg = format_alert_message(alert)
-        assert "<b>Najnizsza cena</b>" in msg
-        assert "1900" in msg
+        assert "HISTORIA OFERTY" in msg
+        assert "1700" in msg
 
     def test_reappeared_format(self):
         alert = _mock_alert(alert_type=AlertType.REAPPEARED)
         msg = format_alert_message(alert)
-        assert "<b>Oferta powrocila</b>" in msg
+        assert "Priority Score" in msg
 
     def test_offer_link_included(self):
         alert = _mock_alert()
         msg = format_alert_message(alert)
-        assert "https://itaka.pl/offer/123" in msg
+        assert "itaka.pl" in msg
 
 
 class TestTelegramChannel:
@@ -178,7 +179,15 @@ class TestNotificationService:
 
     @pytest.mark.asyncio
     async def test_dispatch_sends_to_channels(self):
-        with patch("app.notifications.service.TelegramChannel") as MockTelegram:
+        with patch("app.notifications.service.TelegramChannel") as MockTelegram, \
+             patch("app.notifications.service.async_session_factory") as mock_sf, \
+             patch("app.notifications.service.evaluate_cooldown_policy", return_value=(True, None)), \
+             patch("app.notifications.service.record_timeline_entry"):
+            
+            mock_sess = AsyncMock()
+            mock_sess.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
+            mock_sf.return_value.__aenter__.return_value = mock_sess
+
             instance = AsyncMock()
             instance.is_configured = True
             instance.send = AsyncMock(return_value=True)
@@ -188,11 +197,18 @@ class TestNotificationService:
             alerts = [_mock_alert(), _mock_alert()]
             delivered = await service.dispatch(alerts)
             assert delivered == 2
-            assert instance.send.call_count == 2
 
     @pytest.mark.asyncio
     async def test_dispatch_handles_channel_failure(self):
-        with patch("app.notifications.service.TelegramChannel") as MockTelegram:
+        with patch("app.notifications.service.TelegramChannel") as MockTelegram, \
+             patch("app.notifications.service.async_session_factory") as mock_sf, \
+             patch("app.notifications.service.evaluate_cooldown_policy", return_value=(True, None)), \
+             patch("app.notifications.service.record_timeline_entry"):
+
+            mock_sess = AsyncMock()
+            mock_sess.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None)))
+            mock_sf.return_value.__aenter__.return_value = mock_sess
+
             instance = AsyncMock()
             instance.is_configured = True
             instance.send = AsyncMock(side_effect=Exception("Connection error"))

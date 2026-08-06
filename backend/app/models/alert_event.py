@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Numeric, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +32,9 @@ class AlertEvent(Base):
     )
     alert_type: Mapped[str] = mapped_column(String(50), nullable=False)
     message: Mapped[str] = mapped_column(String(1000), nullable=False)
+    priority_score: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
+    priority_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    reasons_json: Mapped[dict | list | None] = mapped_column(JSONB, nullable=True)
     metadata_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     triggered_at: Mapped[datetime] = mapped_column(

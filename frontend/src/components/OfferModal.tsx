@@ -12,6 +12,10 @@ import {
   Calendar,
   Moon,
   Plane,
+  Car,
+  Bus,
+  Train,
+  Ship,
   Utensils,
   ExternalLink,
   Users,
@@ -127,10 +131,19 @@ export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose, onDelete
             </div>
 
             <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-800 flex items-center gap-3">
-              <Plane className="w-5 h-5 text-indigo-400 shrink-0" />
+              {(() => {
+                const t = String(current.transport_type || 'flight').toLowerCase();
+                if (t === 'self_transport' || t === 'own') return <Car className="w-5 h-5 text-amber-400 shrink-0" />;
+                if (t === 'bus') return <Bus className="w-5 h-5 text-sky-400 shrink-0" />;
+                if (t === 'train') return <Train className="w-5 h-5 text-emerald-400 shrink-0" />;
+                if (t === 'cruise') return <Ship className="w-5 h-5 text-purple-400 shrink-0" />;
+                return <Plane className="w-5 h-5 text-indigo-400 shrink-0" />;
+              })()}
               <div>
-                <div className="text-[10px] text-slate-500 font-medium">Wylot z</div>
-                <div className="text-xs font-semibold">{current.departure_city}</div>
+                <div className="text-[10px] text-slate-500 font-medium">Transport / Wylot</div>
+                <div className="text-xs font-semibold">
+                  {current.departure_city ? `${current.departure_city}` : String(current.transport_type || 'flight').toUpperCase()}
+                </div>
               </div>
             </div>
 
@@ -154,6 +167,11 @@ export const OfferModal: React.FC<OfferModalProps> = ({ offer, onClose, onDelete
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-indigo-400" />
               <span>Operator: <strong className="uppercase">{current.provider}</strong></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-200 font-bold uppercase text-[11px]">
+                Transport: {current.transport_type || 'flight'}
+              </span>
             </div>
             {detail?.days_available !== undefined && (
               <div className="flex items-center gap-1.5">

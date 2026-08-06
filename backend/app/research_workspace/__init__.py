@@ -1,0 +1,53 @@
+"""Research Workspace package."""
+
+from app.research_workspace.schemas import (
+    BatchItemsRequest,
+    DuplicateCheckResponse,
+    ItemCreate,
+    ItemUpdate,
+    MultiOfferCompareReport,
+    MultiOfferCompareRequest,
+    SessionCreate,
+    SessionResponse,
+    WorkspaceItemResponse,
+)
+from app.research_workspace.service import (
+    add_item_to_workspace,
+    batch_delete_items,
+    batch_move_items,
+    check_duplicate_offer,
+    compare_multi_offers,
+    compute_change_detection,
+    create_session,
+    delete_workspace_item,
+    execute_item_analysis,
+    get_or_create_default_session,
+    list_sessions,
+    list_workspace_items,
+    update_workspace_item,
+)
+
+__all__ = [
+    "SessionCreate",
+    "SessionResponse",
+    "ItemCreate",
+    "ItemUpdate",
+    "DuplicateCheckResponse",
+    "BatchItemsRequest",
+    "WorkspaceItemResponse",
+    "MultiOfferCompareRequest",
+    "MultiOfferCompareReport",
+    "get_or_create_default_session",
+    "create_session",
+    "list_sessions",
+    "list_workspace_items",
+    "check_duplicate_offer",
+    "add_item_to_workspace",
+    "delete_workspace_item",
+    "batch_delete_items",
+    "batch_move_items",
+    "execute_item_analysis",
+    "update_workspace_item",
+    "compute_change_detection",
+    "compare_multi_offers",
+]

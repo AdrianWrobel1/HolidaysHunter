@@ -1,0 +1,5 @@
+"""Configuration for Offer Analyzer module."""
+
+DEFAULT_CANDIDATE_SEARCH_LIMIT = 500
+TOP_SIMILAR_OFFERS_COUNT = 10
+HISTOGRAM_BINS_COUNT = 8

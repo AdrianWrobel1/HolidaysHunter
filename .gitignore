@@ -38,4 +38,9 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
-
+# Local logs / dumps / locks
+*.lock
+*_live_capture.json
+*_live_page.html
+*_next_data_live.json
+*_page_live.html

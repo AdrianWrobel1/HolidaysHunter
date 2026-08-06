@@ -62,34 +62,6 @@ async def list_offers(
     )
 
     # Normalize filter parameters on Python side to ensure exact SQL equality can utilize indexes
-    if country:
-        if isinstance(country, list):
-            country = [normalize_country_name(c) for c in country if c]
-        elif isinstance(country, str):
-            country = normalize_country_name(country)
-
-    if region:
-        if isinstance(region, list):
-            region = [normalize_region_name(r) for r in region if r and normalize_region_name(r)]
-        elif isinstance(region, str):
-            region = normalize_region_name(region)
-
-    if provider:
-        if isinstance(provider, list):
-            provider = [normalize_provider_name(p) for p in provider if p and normalize_provider_name(p)]
-        elif isinstance(provider, str):
-            provider = normalize_provider_name(provider)
-
-    if meal_type:
-        def _norm_meal(m: Any) -> str:
-            return str(m).lower().strip().replace(" ", "_").replace("-", "_")
-        if isinstance(meal_type, list):
-            meal_type = [_norm_meal(m) for m in meal_type if m]
-        elif isinstance(meal_type, str):
-            meal_type = _norm_meal(meal_type)
-
-    stmt = select(Offer)
-
     # --- Step-by-step filter application & logging ---
     # Log initial DB total and example offer
     init_total_stmt = select(func.count(Offer.id))
@@ -107,48 +79,112 @@ async def list_offers(
     if available_only:
         filter_conditions.append(("available_only", Offer.is_available.is_(True)))
 
-    if country:
+    if country is not None:
         if isinstance(country, list):
-            filter_conditions.append(("country", Offer.country.in_(country)))
-        else:
-            filter_conditions.append(("country", Offer.country == country))
+            norm_c = [normalize_country_name(c) for c in country if c and str(c).strip()]
+            if norm_c:
+                filter_conditions.append(("country", Offer.country.in_(norm_c)))
+            else:
+                filter_conditions.append(("country", Offer.id.in_([])))
+        elif isinstance(country, str):
+            c_str = country.strip()
+            if c_str:
+                norm_c = normalize_country_name(c_str)
+                filter_conditions.append(("country", Offer.country == norm_c))
+            else:
+                filter_conditions.append(("country", Offer.id.in_([])))
 
-    if region:
+    if region is not None:
         if isinstance(region, list):
-            filter_conditions.append(("region", Offer.region.in_(region)))
-        else:
-            filter_conditions.append(("region", Offer.region == region))
+            norm_r = [normalize_region_name(r) for r in region if r and str(r).strip() and normalize_region_name(r)]
+            if norm_r:
+                filter_conditions.append(("region", Offer.region.in_(norm_r)))
+            else:
+                filter_conditions.append(("region", Offer.id.in_([])))
+        elif isinstance(region, str):
+            r_str = region.strip()
+            if r_str:
+                norm_r = normalize_region_name(r_str)
+                filter_conditions.append(("region", Offer.region == norm_r))
+            else:
+                filter_conditions.append(("region", Offer.id.in_([])))
 
-    if provider:
+    if provider is not None:
         if isinstance(provider, list):
-            filter_conditions.append(("provider", Offer.provider.in_(provider)))
-        else:
-            filter_conditions.append(("provider", Offer.provider == provider))
+            norm_p = [normalize_provider_name(p) for p in provider if p and str(p).strip() and normalize_provider_name(p)]
+            if norm_p:
+                filter_conditions.append(("provider", Offer.provider.in_(norm_p)))
+            else:
+                filter_conditions.append(("provider", Offer.id.in_([])))
+        elif isinstance(provider, str):
+            p_str = provider.strip()
+            if p_str:
+                norm_p = normalize_provider_name(p_str)
+                filter_conditions.append(("provider", Offer.provider == norm_p))
+            else:
+                filter_conditions.append(("provider", Offer.id.in_([])))
 
-    if departure_city:
+    if departure_city is not None:
         if isinstance(departure_city, list):
-            dep_conds = [Offer.departure_city.ilike(f"%{c}%") for c in departure_city if c]
+            dep_conds = [Offer.departure_city.ilike(f"%{c.strip()}%") for c in departure_city if c and str(c).strip()]
             if dep_conds:
                 filter_conditions.append(("departure_city", or_(*dep_conds)))
+            else:
+                filter_conditions.append(("departure_city", Offer.id.in_([])))
         elif isinstance(departure_city, str):
-            filter_conditions.append(("departure_city", Offer.departure_city.ilike(f"%{departure_city}%")))
+            d_str = departure_city.strip()
+            if d_str:
+                filter_conditions.append(("departure_city", Offer.departure_city.ilike(f"%{d_str}%")))
+            else:
+                filter_conditions.append(("departure_city", Offer.id.in_([])))
 
-    if meal_type:
+    if meal_type is not None:
+        def _norm_meal(m: Any) -> str:
+            return str(m).lower().strip().replace(" ", "_").replace("-", "_")
+
         if isinstance(meal_type, list):
-            filter_conditions.append(("meal_type", Offer.meal_type.in_(meal_type)))
-        else:
-            filter_conditions.append(("meal_type", Offer.meal_type == meal_type))
+            norm_m = [_norm_meal(m) for m in meal_type if m and str(m).strip()]
+            if norm_m:
+                filter_conditions.append(("meal_type", Offer.meal_type.in_(norm_m)))
+            else:
+                filter_conditions.append(("meal_type", Offer.id.in_([])))
+        elif isinstance(meal_type, str):
+            m_str = meal_type.strip()
+            if m_str:
+                filter_conditions.append(("meal_type", Offer.meal_type == _norm_meal(m_str)))
+            else:
+                filter_conditions.append(("meal_type", Offer.id.in_([])))
 
     if transport_type:
         filter_conditions.append(("transport_type", Offer.transport_type == transport_type))
 
     if hotel_stars:
         if isinstance(hotel_stars, list):
-            filter_conditions.append(("hotel_stars", Offer.hotel_stars.in_(hotel_stars)))
+            valid_stars = [float(s) for s in hotel_stars if s is not None and 0 <= float(s) <= 9.9]
+            if valid_stars:
+                filter_conditions.append(("hotel_stars", Offer.hotel_stars.in_(valid_stars)))
+            else:
+                filter_conditions.append(("hotel_stars", Offer.id.in_([])))
         else:
-            filter_conditions.append(("hotel_stars", Offer.hotel_stars == hotel_stars))
+            try:
+                s_val = float(hotel_stars)
+                if 0 <= s_val <= 9.9:
+                    filter_conditions.append(("hotel_stars", Offer.hotel_stars == s_val))
+                else:
+                    filter_conditions.append(("hotel_stars", Offer.id.in_([])))
+            except (ValueError, TypeError):
+                filter_conditions.append(("hotel_stars", Offer.id.in_([])))
     elif hotel_stars_min is not None:
-        filter_conditions.append(("hotel_stars_min", Offer.hotel_stars >= hotel_stars_min))
+        try:
+            s_min = float(hotel_stars_min)
+            if 0 <= s_min <= 9.9:
+                filter_conditions.append(("hotel_stars_min", Offer.hotel_stars >= s_min))
+            elif s_min > 9.9:
+                filter_conditions.append(("hotel_stars_min", Offer.id.in_([])))
+            else:
+                filter_conditions.append(("hotel_stars_min", Offer.hotel_stars >= 0))
+        except (ValueError, TypeError):
+            pass
 
     if price_min is not None:
         filter_conditions.append(("price_min", Offer.price_per_person >= price_min))
@@ -217,6 +253,7 @@ async def list_offers(
     logger.info("[offer_service] Step-by-step filter counts: %s", " -> ".join(filter_logs))
 
     # Apply all accumulated conditions to primary query statement
+    stmt = select(Offer)
     for cond in active_conditions:
         stmt = stmt.where(cond)
 

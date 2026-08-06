@@ -36,6 +36,8 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
   const [name, setName] = useState('');
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [selectedTransportTypes, setSelectedTransportTypes] = useState<string[]>([]);
+  const [notificationPolicy, setNotificationPolicy] = useState<string>('HIGH_AND_MUST_SEE');
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
   const [durationMin, setDurationMin] = useState<string>('7');
@@ -61,12 +63,21 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
 
   const availableCountries = filterOptions?.countries || DEFAULT_POPULAR_COUNTRIES;
   const availableCities = filterOptions?.departure_cities || DEFAULT_AIRPORTS;
+  const availableTransportTypes = [
+    { label: '✈️ Przelot samolotem', value: 'flight' },
+    { label: '🚗 Dojazd własny', value: 'self_transport' },
+    { label: '🚌 Autokar', value: 'bus' },
+    { label: '🚆 Pociąg', value: 'train' },
+    { label: '🚢 Rejs', value: 'cruise' },
+  ];
 
   const handleOpenCreateModal = () => {
     setEditingProfileId(null);
     setName('');
     setSelectedCountries([]);
     setSelectedCities([]);
+    setSelectedTransportTypes([]);
+    setNotificationPolicy('HIGH_AND_MUST_SEE');
     setAdults(2);
     setChildren(0);
     setDurationMin('7');
@@ -81,6 +92,8 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
     setName(profile.name);
     setSelectedCountries(profile.countries || []);
     setSelectedCities(profile.departure_cities || []);
+    setSelectedTransportTypes(profile.transport_types || []);
+    setNotificationPolicy(profile.notification_policy || 'HIGH_AND_MUST_SEE');
     setAdults(profile.adults ?? 2);
     setChildren(profile.children ?? 0);
     setDurationMin(profile.duration_min ? String(profile.duration_min) : '7');
@@ -95,6 +108,14 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
       setSelectedCountries(selectedCountries.filter((c) => c !== country));
     } else {
       setSelectedCountries([...selectedCountries, country]);
+    }
+  };
+
+  const toggleTransportType = (tt: string) => {
+    if (selectedTransportTypes.includes(tt)) {
+      setSelectedTransportTypes(selectedTransportTypes.filter((x) => x !== tt));
+    } else {
+      setSelectedTransportTypes([...selectedTransportTypes, tt]);
     }
   };
 
@@ -114,6 +135,8 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
       name,
       countries: selectedCountries.length > 0 ? selectedCountries : undefined,
       departure_cities: selectedCities.length > 0 ? selectedCities : undefined,
+      transport_types: selectedTransportTypes.length > 0 ? selectedTransportTypes : undefined,
+      notification_policy: notificationPolicy,
       adults: Number(adults),
       children: Number(children),
       duration_min: durationMin ? Number(durationMin) : undefined,
@@ -343,6 +366,48 @@ export const ProfilesView: React.FC<ProfilesViewProps> = ({ filterOptions }) => 
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Multi-Select Transport Types */}
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1.5">
+                  Rodzaje Transportu (zaznacz wiele lub pozostaw dla wszystkich):
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableTransportTypes.map((tt) => {
+                    const active = selectedTransportTypes.includes(tt.value);
+                    return (
+                      <button
+                        key={tt.value}
+                        type="button"
+                        onClick={() => toggleTransportType(tt.value)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all ${
+                          active
+                            ? 'bg-teal-600 border-teal-500 text-white shadow-md shadow-teal-600/20 font-bold'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>{tt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Notification Policy Selection */}
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Polityka powiadomień Telegram</label>
+                <select
+                  value={notificationPolicy}
+                  onChange={(e) => setNotificationPolicy(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-slate-100 focus:border-indigo-500"
+                >
+                  <option value="HIGH_AND_MUST_SEE">🔥 MUST SEE + HIGH (Domyślnie - wyważone)</option>
+                  <option value="MUST_SEE_ONLY">🔥🔥🔥 Tylko MUST SEE (Score &gt;= 90)</option>
+                  <option value="ALL_ALERTS">📌 Wszystkie alerty (Score &gt;= 50)</option>
+                  <option value="DAILY_DIGEST">📰 Zbiorczy rapopt dzienny (Brak powiadomień natychmiastowych)</option>
+                </select>
               </div>
 
               {/* Adults & Children */}

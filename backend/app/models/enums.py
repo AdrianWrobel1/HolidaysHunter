@@ -18,8 +18,12 @@ class MealType(StrEnum):
 
 class TransportType(StrEnum):
     FLIGHT = "flight"
+    SELF_TRANSPORT = "self_transport"
     BUS = "bus"
-    OWN = "own"
+    TRAIN = "train"
+    CRUISE = "cruise"
+    UNKNOWN = "unknown"
+    OWN = "self_transport"  # Backwards compatibility alias
 
 
 class AlertType(StrEnum):

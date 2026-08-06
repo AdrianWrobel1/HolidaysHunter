@@ -70,6 +70,16 @@ class TravelProfile(Base):
         ARRAY(String(50)), nullable=True
     )
 
+    # Transport types (multiple allowed)
+    transport_types: Mapped[list[str] | None] = mapped_column(
+        ARRAY(String(50)), nullable=True
+    )
+
+    # Notification Policy: MUST_SEE_ONLY, HIGH_AND_MUST_SEE, ALL_ALERTS, DAILY_DIGEST
+    notification_policy: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="HIGH_AND_MUST_SEE"
+    )
+
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 

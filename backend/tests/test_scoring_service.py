@@ -55,6 +55,7 @@ def _mock_profile(**overrides):
     profile.hotel_stars_min = overrides.get("hotel_stars_min", None)
     profile.meal_types = overrides.get("meal_types", None)
     profile.providers = overrides.get("providers", None)
+    profile.transport_types = overrides.get("transport_types", None)
     return profile
 
 

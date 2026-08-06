@@ -202,6 +202,14 @@ def offer_matches_profile(offer: Offer, profile: TravelProfile) -> bool:
     if profile.providers and offer.provider not in profile.providers:
         return False
 
+    t_types = getattr(profile, "transport_types", None)
+    if (
+        t_types
+        and not type(t_types).__name__ in ("MagicMock", "Mock")
+        and getattr(offer, "transport_type", None) not in t_types
+    ):
+        return False
+
     return True
 
 

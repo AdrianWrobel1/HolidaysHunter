@@ -14,6 +14,7 @@ from app.api.schemas import (
     OfferResponse,
     OffersListResponse,
     PriceHistoryResponse,
+    SeasonalAnalyticsResponse,
 )
 from app.database.session import get_session
 from app.services.offer_service import (
@@ -132,6 +133,99 @@ async def get_seasonal_trends_endpoint(
     """Get monthly/seasonal average and min/max prices per country and region."""
     from app.services.offer_service import get_seasonal_trends
     return await get_seasonal_trends(session, country=country, region=region)
+
+
+@router.get("/seasonal-analytics", response_model=SeasonalAnalyticsResponse)
+async def get_seasonal_analytics_endpoint(
+    country: list[str] | str | None = Query(None),
+    region: list[str] | str | None = Query(None),
+    departure_month: list[int] | int | None = Query(None),
+    travel_length: int | str | None = Query(None),
+    duration_min: int | None = Query(None, ge=1),
+    duration_max: int | None = Query(None, ge=1),
+    transport_type: list[str] | str | None = Query(None),
+    meal_type: list[str] | str | None = Query(None),
+    hotel_stars: list[float] | float | None = Query(None),
+    hotel_stars_min: float | None = Query(None, ge=1, le=5),
+    hotel_rating_min: float | None = Query(None, ge=1, le=10),
+    provider: list[str] | str | None = Query(None),
+    departure_city: list[str] | str | None = Query(None),
+    adults: int | None = Query(None, ge=1),
+    children: int | None = Query(None, ge=0),
+    price_min: Decimal | None = Query(None, ge=0),
+    price_max: Decimal | None = Query(None, ge=0),
+    deal_score_min: int | None = Query(None, ge=0, le=100),
+    value_score_min: int | None = Query(None, ge=0, le=100),
+    is_last_minute: bool | None = Query(None),
+    is_first_minute: bool | None = Query(None),
+    session: AsyncSession = Depends(get_session),
+) -> SeasonalAnalyticsResponse:
+    """Get complete Seasonal Analytics V2 decision support dashboard payload."""
+    from app.services.seasonal_service import get_seasonal_analytics
+
+    cntries = [country] if isinstance(country, str) else country
+    rgns = [region] if isinstance(region, str) else region
+    months = [departure_month] if isinstance(departure_month, int) else departure_month
+    transports = [transport_type] if isinstance(transport_type, str) else transport_type
+    meals = [meal_type] if isinstance(meal_type, str) else meal_type
+    stars = [hotel_stars] if isinstance(hotel_stars, (int, float)) else hotel_stars
+    prov_list = [provider] if isinstance(provider, str) else provider
+    dep_cities = [departure_city] if isinstance(departure_city, str) else departure_city
+
+    data = await get_seasonal_analytics(
+        session,
+        country=cntries,
+        region=rgns,
+        departure_month=months,
+        travel_length=travel_length,
+        duration_min=duration_min,
+        duration_max=duration_max,
+        transport_type=transports,
+        meal_type=meals,
+        hotel_stars=stars,
+        hotel_stars_min=hotel_stars_min,
+        hotel_rating_min=hotel_rating_min,
+        provider=prov_list,
+        departure_city=dep_cities,
+        adults=adults,
+        children=children,
+        price_min=price_min,
+        price_max=price_max,
+        deal_score_min=deal_score_min,
+        value_score_min=value_score_min,
+        is_last_minute=is_last_minute,
+        is_first_minute=is_first_minute,
+    )
+    return SeasonalAnalyticsResponse(**data)
+
+
+@router.post("/seasonal-workspace")
+async def create_seasonal_workspace_endpoint(
+    country: list[str] | str | None = Query(None),
+    region: list[str] | str | None = Query(None),
+    departure_month: list[int] | int | None = Query(None),
+    transport_type: list[str] | str | None = Query(None),
+    provider: list[str] | str | None = Query(None),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Create a Research Workspace session pre-populated with offers from active seasonal filters."""
+    from app.services.seasonal_service import create_seasonal_research_session
+
+    cntries = [country] if isinstance(country, str) else country
+    rgns = [region] if isinstance(region, str) else region
+    months = [departure_month] if isinstance(departure_month, int) else departure_month
+    transports = [transport_type] if isinstance(transport_type, str) else transport_type
+    prov_list = [provider] if isinstance(provider, str) else provider
+
+    return await create_seasonal_research_session(
+        session,
+        country=cntries,
+        region=rgns,
+        departure_month=months,
+        transport_type=transports,
+        provider=prov_list,
+    )
+
 
 
 @router.post("/fetch-live")

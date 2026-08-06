@@ -2,17 +2,21 @@
 
 import React from 'react';
 import { OfferResponse } from '@/types/api';
-import { TravelScoreBadge } from './TravelScoreBadge';
 import {
   MapPin,
   Calendar,
   Moon,
   Plane,
+  Car,
+  Bus,
+  Train,
+  Ship,
   Utensils,
   ExternalLink,
   Star,
   Eye,
   Trash2,
+  Zap,
 } from 'lucide-react';
 
 import { resolveOfferBookingUrl } from '@/lib/urlUtils';
@@ -46,6 +50,51 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect, onDelete 
 
   const mealText = MEAL_LABELS[offer.meal_type] || offer.meal_type;
 
+  // Transport Icon & Label resolution
+  const renderTransportIcon = () => {
+    const t = String(offer.transport_type || 'flight').toLowerCase();
+    if (t === 'self_transport' || t === 'own') {
+      return (
+        <span className="flex items-center gap-1 text-amber-300">
+          <Car className="w-3.5 h-3.5" />
+          <span className="truncate">Dojazd własny</span>
+        </span>
+      );
+    }
+    if (t === 'bus') {
+      return (
+        <span className="flex items-center gap-1 text-sky-300">
+          <Bus className="w-3.5 h-3.5" />
+          <span className="truncate">Autokar</span>
+        </span>
+      );
+    }
+    if (t === 'train') {
+      return (
+        <span className="flex items-center gap-1 text-emerald-300">
+          <Train className="w-3.5 h-3.5" />
+          <span className="truncate">Pociąg</span>
+        </span>
+      );
+    }
+    if (t === 'cruise') {
+      return (
+        <span className="flex items-center gap-1 text-purple-300">
+          <Ship className="w-3.5 h-3.5" />
+          <span className="truncate">Rejs</span>
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1 text-indigo-300">
+        <Plane className="w-3.5 h-3.5" />
+        <span className="truncate">Z: {offer.departure_city}</span>
+      </span>
+    );
+  };
+
+  const dealScoreVal = offer.travel_score || 75;
+
   return (
     <div className="group relative flex flex-col rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md overflow-hidden hover:border-slate-700 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300">
       {/* Image Container */}
@@ -68,13 +117,21 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect, onDelete 
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-          <span
-            className={`px-2.5 py-1 rounded-full text-xs font-bold border backdrop-blur-md shadow-md ${providerInfo.bg}`}
-          >
-            {providerInfo.label}
-          </span>
-          <div className="pointer-events-auto">
-            <TravelScoreBadge score={offer.travel_score} size="sm" />
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`px-2.5 py-1 rounded-full text-xs font-bold border backdrop-blur-md shadow-md ${providerInfo.bg}`}
+            >
+              {providerInfo.label}
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold border border-slate-700 bg-slate-900/90 backdrop-blur-md shadow-md">
+              {renderTransportIcon()}
+            </span>
+          </div>
+          
+          {/* Primary Metric: Deal Score */}
+          <div className="pointer-events-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-200 text-xs font-black shadow-lg backdrop-blur-md">
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <span>Deal Score {dealScoreVal}</span>
           </div>
         </div>
 
@@ -95,7 +152,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect, onDelete 
       {/* Details Body */}
       <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
         <div className="space-y-2.5 text-xs text-slate-300">
-          {/* Stars & Rating */}
+          {/* Stars & Explicit Guest/Hotel Rating */}
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
             <div className="flex items-center gap-1 text-amber-400">
               {offer.hotel_stars ? (
@@ -109,12 +166,12 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect, onDelete 
             </div>
             {offer.hotel_rating && (
               <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
-                Ocena {offer.hotel_rating}/10
+                Hotel Rating {offer.hotel_rating}/10
               </span>
             )}
           </div>
 
-          {/* Departure & Nights */}
+          {/* Departure, Nights, Transport, Meal */}
           <div className="grid grid-cols-2 gap-2 text-slate-400">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
@@ -125,8 +182,7 @@ export const OfferCard: React.FC<OfferCardProps> = ({ offer, onSelect, onDelete 
               <span>{offer.duration_nights} nocy</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Plane className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-              <span className="truncate">Z: {offer.departure_city}</span>
+              {renderTransportIcon()}
             </div>
             <div className="flex items-center gap-1.5">
               <Utensils className="w-3.5 h-3.5 text-indigo-400 shrink-0" />

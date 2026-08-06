@@ -54,6 +54,8 @@ async def create_profile(
     hotel_stars_min: float | None = None,
     meal_types: list[str] | None = None,
     providers: list[str] | None = None,
+    transport_types: list[str] | None = None,
+    notification_policy: str = "HIGH_AND_MUST_SEE",
 ) -> TravelProfile:
     """Create a new travel profile."""
     profile = TravelProfile(
@@ -72,6 +74,8 @@ async def create_profile(
         hotel_stars_min=hotel_stars_min,
         meal_types=meal_types,
         providers=providers,
+        transport_types=transport_types,
+        notification_policy=notification_policy,
         is_active=True,
     )
     session.add(profile)
@@ -94,7 +98,8 @@ async def update_profile(
         "name", "countries", "regions", "departure_cities",
         "date_from", "date_to", "duration_min", "duration_max",
         "budget_min", "budget_max", "adults", "children",
-        "hotel_stars_min", "meal_types", "providers", "is_active",
+        "hotel_stars_min", "meal_types", "providers", "transport_types",
+        "notification_policy", "is_active",
     }
 
     for key, value in fields.items():

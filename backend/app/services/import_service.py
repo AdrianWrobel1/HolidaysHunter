@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import Provider
+from app.models.enums import Provider, TransportType
 from app.models.offer import Offer
 from app.models.price_history import PriceHistory
 from app.notifications.service import dispatch_notifications
@@ -59,6 +59,7 @@ async def run_import(
     new_offers: list[Offer] = []
     updated_offers: list[Offer] = []
     skipped_count = 0
+    skipped_transport_count = 0
     normalized_count = 0
 
     from app.services.qa_service import store_import_audit_record
@@ -81,6 +82,13 @@ async def run_import(
                 "reason": "Odrzucono podczas normalizacji: brakujące wymagane pola lub niepoprawny format daty/ceny",
             })
             continue
+
+        # --- Transport filter: accept all valid TransportTypes ---
+        if not isinstance(normalized.transport_type, TransportType):
+            logger.debug(
+                "[import_service] %s: unhandled transport_type=%s for offer %s",
+                provider.value, normalized.transport_type, normalized.external_id,
+            )
 
         store_raw_payload(provider.value, normalized.external_id, raw)
 
@@ -123,8 +131,8 @@ async def run_import(
             })
 
     logger.info(
-        "[import_service] %s: normalized=%d, skipped=%d, new=%d, updated=%d — seen_ids count=%d",
-        provider.value, normalized_count, skipped_count,
+        "[import_service] %s: normalized=%d, skipped=%d, skipped_transport=%d, new=%d, updated=%d — seen_ids count=%d",
+        provider.value, normalized_count, skipped_count, skipped_transport_count,
         len(new_offers), len(updated_offers), len(seen_offer_ids),
     )
 
@@ -156,12 +164,13 @@ async def run_import(
         logger.exception("[import_service] %s: QA audit failed", provider.value)
 
     logger.info(
-        "[import_service] %s import DONE: new=%d, updated=%d, reappeared=%d, skipped=%d",
+        "[import_service] %s import DONE: new=%d, updated=%d, reappeared=%d, skipped=%d, skipped_transport=%d",
         provider.value,
         len(new_offers),
         len(updated_offers),
         len(reappeared_offers),
         skipped_count,
+        skipped_transport_count,
     )
 
 
@@ -176,6 +185,7 @@ async def _find_existing_offer(
         Offer.departure_city == normalized.departure_city,
         Offer.adults == normalized.adults,
         Offer.children == normalized.children,
+        Offer.transport_type == normalized.transport_type.value,
     )
     result = await session.execute(stmt)
     return result.scalar_one_or_none()

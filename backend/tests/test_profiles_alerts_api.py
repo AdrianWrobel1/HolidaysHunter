@@ -34,6 +34,8 @@ def _mock_profile(**overrides):
         "hotel_stars_min": 3.0,
         "meal_types": ["all_inclusive"],
         "providers": None,
+        "transport_types": ["flight"],
+        "notification_policy": "HIGH_AND_MUST_SEE",
         "is_active": True,
         "created_at": datetime(2026, 7, 1, tzinfo=timezone.utc),
         "updated_at": datetime(2026, 7, 1, tzinfo=timezone.utc),

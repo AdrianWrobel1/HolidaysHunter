@@ -1,12 +1,18 @@
 import {
   AlertsListResponse,
   FilterOptionsResponse,
+  MultiOfferCompareReport,
+  OfferAnalysisReport,
   OfferDetailResponse,
   OfferQueryParams,
   OffersListResponse,
   PriceHistoryResponse,
+  SeasonalAnalyticsResponse,
+  SeasonalQueryParams,
+  SessionResponse,
   TravelProfile,
   TravelProfileCreate,
+  WorkspaceItemResponse,
 } from '@/types/api';
 
 const rawApiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
@@ -259,3 +265,204 @@ export async function clearAllOffers(): Promise<{ count: number; message: string
 
   return res.json();
 }
+
+export async function analyzeOffer(url: string): Promise<OfferAnalysisReport> {
+  const res = await fetch(`${API_BASE_URL}/admin/analyze-offer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: 'Nie udało się wykonać analizy oferty.' }));
+    throw new Error(errorData.detail || 'Błąd podczas analizy oferty.');
+  }
+
+  return res.json();
+}
+
+export async function fetchWorkspaceSessions(): Promise<SessionResponse[]> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/sessions`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch workspace sessions: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function createWorkspaceSession(name: string, description?: string): Promise<SessionResponse> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, description }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to create session: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchWorkspaceItems(session_id: string): Promise<WorkspaceItemResponse[]> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items?session_id=${encodeURIComponent(session_id)}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch session items: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function addWorkspaceItem(
+  session_id: string,
+  offer_url: string,
+  tags?: string[],
+  notes?: string[],
+  force = false
+): Promise<{ success: boolean; item?: WorkspaceItemResponse; duplicate?: any }> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id, offer_url, tags: tags || ['Observe'], notes: notes || [], force }),
+  });
+
+  if (res.status === 409) {
+    const duplicateData = await res.json();
+    return { success: false, duplicate: duplicateData };
+  }
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: 'Failed to add workspace item' }));
+    throw new Error(errorData.detail || 'Nie udało się dodać oferty do workspace.');
+  }
+
+  const item = await res.json();
+  return { success: true, item };
+}
+
+export async function updateWorkspaceItem(
+  item_id: string,
+  data: { is_pinned?: boolean; tags?: string[]; notes?: string[] }
+): Promise<WorkspaceItemResponse> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items/${item_id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update workspace item: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function deleteWorkspaceItem(item_id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items/${item_id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete item: ${res.statusText}`);
+  }
+}
+
+export async function batchDeleteWorkspaceItems(item_ids: string[]): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items/batch-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_ids }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete items: ${res.statusText}`);
+  }
+}
+
+export async function batchMoveWorkspaceItems(item_ids: string[], target_session_id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items/batch-move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_ids, target_session_id }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to move items: ${res.statusText}`);
+  }
+}
+
+export async function reanalyzeWorkspaceItem(item_id: string): Promise<WorkspaceItemResponse> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/items/${item_id}/analyze`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to reanalyze item: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function compareWorkspaceOffers(item_ids: string[]): Promise<MultiOfferCompareReport> {
+  const res = await fetch(`${API_BASE_URL}/admin/workspace/compare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_ids }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: 'Failed to compare offers' }));
+    throw new Error(errorData.detail || 'Błąd podczas porównywania ofert.');
+  }
+  return res.json();
+}
+
+export async function fetchSeasonalAnalytics(params: SeasonalQueryParams = {}): Promise<SeasonalAnalyticsResponse> {
+  const urlParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (v !== undefined && v !== null && v !== '') {
+            urlParams.append(key, String(v));
+          }
+        });
+      } else {
+        urlParams.append(key, String(value));
+      }
+    }
+  });
+
+  const res = await fetch(`${API_BASE_URL}/offers/seasonal-analytics?${urlParams.toString()}`, {
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch seasonal analytics: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+export async function createSeasonalWorkspaceSession(params: SeasonalQueryParams = {}): Promise<{ status: string; session_id: string; session_name: string; offers_added: number; message: string }> {
+  const urlParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (v !== undefined && v !== null && v !== '') {
+            urlParams.append(key, String(v));
+          }
+        });
+      } else {
+        urlParams.append(key, String(value));
+      }
+    }
+  });
+
+  const res = await fetch(`${API_BASE_URL}/offers/seasonal-workspace?${urlParams.toString()}`, {
+    method: 'POST',
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to create seasonal workspace session: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+

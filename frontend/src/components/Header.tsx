@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Compass, ShieldCheck, Bell, Sparkles, TrendingUp, Send, CheckCircle2, XCircle } from 'lucide-react';
+import { Compass, ShieldCheck, Bell, Sparkles, TrendingUp, Send, CheckCircle2, XCircle, BarChart3, FolderKanban } from 'lucide-react';
 import { fetchTelegramStatus, toggleTelegramNotifications } from '@/lib/api';
 
 interface HeaderProps {
-  activeTab: 'explorer' | 'profiles' | 'alerts' | 'seasonal';
-  onTabChange: (tab: 'explorer' | 'profiles' | 'alerts' | 'seasonal') => void;
+  activeTab: 'explorer' | 'profiles' | 'alerts' | 'seasonal' | 'analyzer' | 'workspace';
+  onTabChange: (tab: 'explorer' | 'profiles' | 'alerts' | 'seasonal' | 'analyzer' | 'workspace') => void;
   unreadAlertsCount: number;
 }
 
@@ -101,6 +101,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => onTabChange('workspace')}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all ${
+                activeTab === 'workspace'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <FolderKanban className="w-4 h-4 text-indigo-400" suppressHydrationWarning />
+              <span className="hidden sm:inline">Research Workspace</span>
+            </button>
+
+            <button
               onClick={() => onTabChange('profiles')}
               className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all ${
                 activeTab === 'profiles'
@@ -146,4 +158,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-
