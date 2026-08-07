@@ -15,6 +15,7 @@ from uuid import UUID
 
 import httpx
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.database.session import async_session_factory
